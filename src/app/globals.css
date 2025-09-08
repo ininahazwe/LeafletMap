@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
 
 :root {
   --background: #ffffff;
@@ -23,4 +24,19 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Fix pour les cartes Leaflet partiellement affichées */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+/* Assure-toi que les tuiles se chargent correctement */
+.leaflet-tile {
+  max-width: none !important;
+}
+
+.leaflet-tile-container {
+  pointer-events: auto !important;
 }

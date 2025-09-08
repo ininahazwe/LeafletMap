@@ -1,103 +1,221 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import dynamic from "next/dynamic";
+import CountryModal from "@/components/CountryModal";
+
+const MapView = dynamic(() => import("@/components/MapView"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[520px] bg-gray-100 animate-pulse rounded-xl" />
+  ),
+});
+
+type Row = {
+  id: number;
+  position: number;
+  score_global: number;
+  country: { iso_a3: string; name_fr: string; name_en: string };
+};
+
+type CountryData = {
+  iso3: string;
+  name: string;
+  score?: number;
+};
+
+export default function Page() {
+  const [year, setYear] = useState<number>(2025);
+  const [rows, setRows] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<CountryData | null>(null);
+
+  useEffect(() => {
+    let ignore = false;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const { data, error } = await supabase
+          .from("rankings")
+          .select(
+            "id, position, score_global, country:countries(iso_a3,name_fr,name_en)"
+          )
+          .eq("year", year)
+          .order("position", { ascending: true });
+
+        if (!ignore) {
+          if (error) {
+            console.error(error);
+            setError(error.message);
+            setRows([]);
+          } else {
+            setRows((data as any) ?? []);
+          }
+          setLoading(false);
+        }
+      } catch (e: any) {
+        if (!ignore) {
+          setError(e?.message ?? "Erreur inconnue");
+          setLoading(false);
+        }
+      }
+    })();
+    return () => {
+      ignore = true;
+    };
+  }, [year]);
+
+  // Map ISO3 -> score
+  const scoresByIso3 = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const r of rows) {
+      const iso = r.country?.iso_a3?.toUpperCase?.();
+      if (iso) map[iso] = r.score_global;
+    }
+    return map;
+  }, [rows]);
+
+  // Map ISO3 -> données complètes pour le modal
+  const countryDataByIso3 = useMemo(() => {
+    const map: Record<string, CountryData> = {};
+    for (const r of rows) {
+      const iso = r.country?.iso_a3?.toUpperCase?.();
+      if (iso) {
+        map[iso] = {
+          iso3: iso,
+          name: r.country?.name_fr ?? r.country?.name_en ?? iso,
+          score: r.score_global
+        };
+      }
+    }
+    return map;
+  }, [rows]);
+
+  // Fallback de test si base vide (utile en dev)
+  const testScores: Record<string, number> = {
+    FRA: 85.5,
+    GHA: 32.1,
+    USA: 72.3,
+    CAN: 83.2,
+    DEU: 82.1,
+    GBR: 78.9,
+    JPN: 69.7,
+    BRA: 41.8,
+    AUS: 81.7,
+    CHN: 58.4,
+  };
+  const finalScores =
+    Object.keys(scoresByIso3).length > 0 ? scoresByIso3 : testScores;
+
+  // Handler pour ouvrir le modal
+  const handleCountryClick = (iso3: string) => {
+    // Chercher dans les vraies données d'abord
+    let countryData = countryDataByIso3[iso3];
+    
+    // Sinon utiliser les données de test
+    if (!countryData && testScores[iso3]) {
+      countryData = {
+        iso3,
+        name: iso3, // On n'a que l'ISO en test
+        score: testScores[iso3]
+      };
+    }
+    
+    if (countryData) {
+      setSelectedCountry(countryData);
+    }
+  };
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main className="max-w-6xl mx-auto p-6 space-y-6">
+      <header className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Classement {year}</h1>
+        <select
+          className="border rounded px-3 py-2"
+          value={year}
+          onChange={(e) => setYear(parseInt(e.target.value))}
+        >
+          {[2025, 2024, 2023].map((y) => (
+            <option key={y} value={y}>
+              {y}
+            </option>
+          ))}
+        </select>
+      </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Zone debug rapide */}
+      <div className="bg-blue-50 p-4 rounded-lg text-sm">
+        <p>
+          <strong>Chargement:</strong> {loading ? "Oui" : "Non"}
+        </p>
+        <p>
+          <strong>Erreur:</strong> {error || "Aucune"}
+        </p>
+        <p>
+          <strong>Pays (liste):</strong> {rows.length}
+        </p>
+        <p>
+          <strong>Pays avec score (carte):</strong> {Object.keys(scoresByIso3).length}
+        </p>
+        <p>
+          <strong>Données de test utilisées:</strong>{" "}
+          {Object.keys(scoresByIso3).length === 0 ? "Oui" : "Non"}
+        </p>
+      </div>
+
+      {/* Liste */}
+      {loading ? (
+        <p>Chargement…</p>
+      ) : error ? (
+        <div className="bg-red-50 p-4 rounded-lg text-red-600">
+          <p>
+            <strong>Erreur:</strong> {error}
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      ) : (
+        <ul className="divide-y bg-white rounded-xl border">
+          {rows.length === 0 ? (
+            <li className="p-4 text-gray-500">Aucune donnée pour {year}</li>
+          ) : (
+            rows.map((r) => (
+              <li
+                key={r.id}
+                className="py-3 px-4 flex items-center justify-between cursor-pointer hover:bg-gray-50"
+                onClick={() => handleCountryClick(r.country?.iso_a3?.toUpperCase())}
+              >
+                <span className="w-12 text-right">{r.position}</span>
+                <span className="flex-1 pl-4">
+                  {r.country?.name_fr ?? r.country?.name_en}
+                </span>
+                <span className="w-24 text-right">
+                  {r.score_global?.toFixed(3)}
+                </span>
+              </li>
+            ))
+          )}
+        </ul>
+      )}
+
+      {/* Carte */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-medium">Carte {year}</h2>
+        <MapView 
+          scoresByIso3={finalScores} 
+          onCountryClick={handleCountryClick}
+        />
+        <div className="text-sm text-gray-600">
+          Légende : ≥80 bleu, ≥65 vert, ≥50 orange, ≥35 rouge, sinon violet.
+        </div>
+      </section>
+
+      {/* Modal */}
+      <CountryModal 
+        country={selectedCountry}
+        onClose={() => setSelectedCountry(null)}
+      />
+    </main>
   );
 }
