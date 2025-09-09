@@ -1,70 +1,16 @@
-// CountryModal.tsx - Version simplifiée avec appels Supabase directs
-import React, { useEffect, useState } from 'react';
+// components/CountryModal.tsx - Version refactorisée
+import React from 'react';
 import { X, ExternalLink, Radio, Tv, Newspaper, Globe, Shield, Users, Building, Gavel } from 'lucide-react';
-import { supabase } from '@/lib/supabase'; // Ajustez le chemin selon votre structure
+import { useCountryDetails } from '@/hooks/useCountryDetails';
 
 interface CountryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  countryName: string;
-  region?: string;
+  iso3: string;
 }
 
-const CountryModal: React.FC<CountryModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  countryName, 
-  region = 'Africa' 
-}) => {
-  const [mediaData, setMediaData] = useState<any>(null);
-  const [rankingData, setRankingData] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (isOpen && countryName) {
-      fetchData();
-    }
-  }, [isOpen, countryName]);
-
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // 1. Récupérer le pays et ses données médiatiques
-      const { data: countryWithMedia, error: countryError } = await supabase
-        .from('countries')
-        .select(`
-          *,
-          media_environment(*)
-        `)
-        .or(`name_fr.ilike.%${countryName}%,name_en.ilike.%${countryName}%`)
-        .single();
-
-      if (countryError) {
-        throw new Error(`Pays introuvable: ${countryError.message}`);
-      }
-
-      // 2. Récupérer les données de ranking les plus récentes (optionnel)
-      const { data: ranking } = await supabase
-        .from('rankings')
-        .select('*')
-        .eq('country_id', countryWithMedia.id)
-        .order('year', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      setMediaData(countryWithMedia.media_environment?.[0] || null);
-      setRankingData(ranking);
-      
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors du chargement des données');
-      console.error('Error fetching data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+const CountryModal: React.FC<CountryModalProps> = ({ isOpen, onClose, iso3 }) => {
+  const { countryData, loading, error } = useCountryDetails(iso3);
 
   const regionColors = {
     'Africa': 'from-orange-500 to-red-600',
@@ -75,12 +21,18 @@ const CountryModal: React.FC<CountryModalProps> = ({
     'default': 'from-gray-500 to-gray-700'
   };
 
+  // Déterminer la région et le gradient
+  const region = countryData?.region || 'default';
   const gradientClass = regionColors[region as keyof typeof regionColors] || regionColors.default;
+
+  // Récupérer le ranking le plus récent
+  const latestRanking = countryData?.rankings?.[0];
+  const mediaData = countryData?.media_environment;
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 z-modal-overlay flex items-end justify-center">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300"
@@ -88,7 +40,7 @@ const CountryModal: React.FC<CountryModalProps> = ({
       />
       
       {/* Modal */}
-      <div className="relative w-full max-w-6xl h-[80vh] bg-white shadow-2xl transform transition-all duration-600 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] translate-y-0">
+      <div className="relative w-full max-w-6xl h-[80vh] bg-white shadow-2xl transform transition-all duration-600 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] translate-y-0 z-modal-content">
         
         {/* Header avec gradient régional */}
         <div className={`bg-gradient-to-r ${gradientClass} text-white p-6 relative`}>
@@ -104,12 +56,14 @@ const CountryModal: React.FC<CountryModalProps> = ({
               <Globe size={24} />
             </div>
             <div>
-              <h2 className="text-3xl font-bold">{countryName}</h2>
+              <h2 className="text-3xl font-bold">
+                {countryData?.name_fr || countryData?.name_en || iso3}
+              </h2>
               <div className="flex items-center gap-4 text-white text-opacity-90">
                 <span>{region} • Environnement Médiatique</span>
-                {rankingData && (
+                {latestRanking && (
                   <span className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
-                    Position {rankingData.position} • Score {rankingData.score_global?.toFixed(1)}
+                    Position {latestRanking.position} • Score {latestRanking.score_global?.toFixed(1)} ({latestRanking.year})
                   </span>
                 )}
               </div>
@@ -125,9 +79,16 @@ const CountryModal: React.FC<CountryModalProps> = ({
             </div>
           ) : error ? (
             <div className="flex items-center justify-center h-full text-red-500">
-              <p>{error}</p>
+              <div className="text-center">
+                <p className="text-lg font-medium">Erreur de chargement</p>
+                <p className="text-sm mt-2">{error}</p>
+              </div>
             </div>
-          ) : mediaData ? (
+          ) : !countryData ? (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              <p>Aucune donnée disponible pour {iso3}</p>
+            </div>
+          ) : (
             <div className="p-6">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
@@ -135,7 +96,7 @@ const CountryModal: React.FC<CountryModalProps> = ({
                 <div className="lg:col-span-2 space-y-6">
                   
                   {/* Environnement Légal */}
-                  {mediaData.legal_environment && (
+                  {mediaData?.legal_environment && (
                     <div className="bg-gray-50 rounded-lg p-5">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="p-2 bg-blue-100 rounded-lg">
@@ -148,7 +109,7 @@ const CountryModal: React.FC<CountryModalProps> = ({
                   )}
 
                   {/* Régulateurs */}
-                  {mediaData.media_regulators && (
+                  {mediaData?.media_regulators && (
                     <div className="bg-gray-50 rounded-lg p-5">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="p-2 bg-purple-100 rounded-lg">
@@ -161,7 +122,7 @@ const CountryModal: React.FC<CountryModalProps> = ({
                   )}
 
                   {/* Associations de Journalistes */}
-                  {mediaData.journalists_associations && (
+                  {mediaData?.journalists_associations && (
                     <div className="bg-gray-50 rounded-lg p-5">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="p-2 bg-green-100 rounded-lg">
@@ -174,7 +135,7 @@ const CountryModal: React.FC<CountryModalProps> = ({
                   )}
 
                   {/* Liberté Internet */}
-                  {mediaData.internet_freedom && (
+                  {mediaData?.internet_freedom && (
                     <div className="bg-gray-50 rounded-lg p-5">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="p-2 bg-red-100 rounded-lg">
@@ -187,52 +148,11 @@ const CountryModal: React.FC<CountryModalProps> = ({
                   )}
                 </div>
 
-                {/* Sidebar avec données chiffrées */}
+                {/* Sidebar avec informations médiatiques */}
                 <div className="space-y-4">
-                  
-                  {/* Scores RSF */}
-                  {rankingData && (
-                    <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg p-4">
-                      <h4 className="font-semibold text-orange-800 mb-3">Scores RSF {rankingData.year}</h4>
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-orange-600">{rankingData.position}</div>
-                          <div className="text-orange-700">Position</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-red-600">{rankingData.score_global?.toFixed(1)}</div>
-                          <div className="text-red-700">Score Global</div>
-                        </div>
-                        {rankingData.score_political && (
-                          <div className="text-center">
-                            <div className="text-lg font-semibold text-blue-600">{rankingData.score_political.toFixed(1)}</div>
-                            <div className="text-blue-700 text-xs">Politique</div>
-                          </div>
-                        )}
-                        {rankingData.score_economic && (
-                          <div className="text-center">
-                            <div className="text-lg font-semibold text-green-600">{rankingData.score_economic.toFixed(1)}</div>
-                            <div className="text-green-700 text-xs">Économique</div>
-                          </div>
-                        )}
-                        {rankingData.score_legal && (
-                          <div className="text-center">
-                            <div className="text-lg font-semibold text-purple-600">{rankingData.score_legal.toFixed(1)}</div>
-                            <div className="text-purple-700 text-xs">Légal</div>
-                          </div>
-                        )}
-                        {rankingData.score_social && (
-                          <div className="text-center">
-                            <div className="text-lg font-semibold text-indigo-600">{rankingData.score_social.toFixed(1)}</div>
-                            <div className="text-indigo-700 text-xs">Social</div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
 
                   {/* Stations Radio */}
-                  {mediaData.radio_stations && (
+                  {mediaData?.radio_stations && (
                     <div className="bg-white border rounded-lg p-4">
                       <div className="flex items-center gap-3 mb-3">
                         <Radio className="w-5 h-5 text-orange-500" />
@@ -243,7 +163,7 @@ const CountryModal: React.FC<CountryModalProps> = ({
                   )}
 
                   {/* Stations TV */}
-                  {mediaData.tv_stations && (
+                  {mediaData?.tv_stations && (
                     <div className="bg-white border rounded-lg p-4">
                       <div className="flex items-center gap-3 mb-3">
                         <Tv className="w-5 h-5 text-blue-500" />
@@ -254,7 +174,7 @@ const CountryModal: React.FC<CountryModalProps> = ({
                   )}
 
                   {/* Journaux */}
-                  {mediaData.newspapers && (
+                  {mediaData?.newspapers && (
                     <div className="bg-white border rounded-lg p-4">
                       <div className="flex items-center gap-3 mb-3">
                         <Newspaper className="w-5 h-5 text-green-500" />
@@ -265,7 +185,7 @@ const CountryModal: React.FC<CountryModalProps> = ({
                   )}
 
                   {/* Médias en ligne */}
-                  {mediaData.online_media && (
+                  {mediaData?.online_media && (
                     <div className="bg-white border rounded-lg p-4">
                       <div className="flex items-center gap-3 mb-3">
                         <Globe className="w-5 h-5 text-purple-500" />
@@ -276,7 +196,7 @@ const CountryModal: React.FC<CountryModalProps> = ({
                   )}
 
                   {/* Médias Leaders */}
-                  {mediaData.leading_media && (
+                  {mediaData?.leading_media && (
                     <div className="bg-white border rounded-lg p-4">
                       <div className="flex items-center gap-3 mb-3">
                         <ExternalLink className="w-5 h-5 text-indigo-500" />
@@ -288,10 +208,6 @@ const CountryModal: React.FC<CountryModalProps> = ({
 
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full text-gray-500">
-              <p>Aucune donnée disponible pour {countryName}</p>
             </div>
           )}
         </div>

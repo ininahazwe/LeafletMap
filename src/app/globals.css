@@ -40,3 +40,31 @@ body {
 .leaflet-tile-container {
   pointer-events: auto !important;
 }
+
+/* CORRECTION : Z-index pour les modals au-dessus de Leaflet */
+/* Leaflet utilise des z-index très élevés (1000+), il faut être au-dessus */
+.modal-overlay {
+  z-index: 9999 !important;
+}
+
+.modal-content {
+  z-index: 10000 !important;
+}
+
+/* Alternative : classe utilitaire Tailwind renforcée */
+.z-modal-overlay {
+  z-index: 9999 !important;
+}
+
+.z-modal-content {
+  z-index: 10000 !important;
+}
+
+/* Leaflet popup et contrôles restent en dessous des modals */
+.leaflet-popup-pane {
+  z-index: 600 !important;
+}
+
+.leaflet-control-container {
+  z-index: 800 !important;
+}
