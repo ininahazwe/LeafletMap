@@ -2,8 +2,35 @@
 @import "leaflet/dist/leaflet.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Palette Honshu - Bleus principaux */
+  --honshu-blue-deep: #2E4057;
+  --honshu-blue-primary: #4E79A7;
+  --honshu-blue-medium: #7B9FE0;
+  --honshu-blue-light: #9BB5E8;
+  --honshu-blue-pale: #E3EBFF;
+  --honshu-blue-ghost: #F8FAFC;
+  
+  /* Palette Honshu - Rouges/Corails */
+  --honshu-coral-primary: #E85A4F;
+  --honshu-coral-medium: #F07167;
+  --honshu-coral-light: #F8A79D;
+  --honshu-coral-pale: #FBC2B8;
+  --honshu-coral-ghost: #FFDAD4;
+  
+  /* Neutrals minimalistes */
+  --neutral-white: #FFFFFF;
+  --neutral-ghost: #FAFAFA;
+  --neutral-light: #F5F5F5;
+  --neutral-medium: #E0E0E0;
+  --neutral-dark: #424242;
+  --neutral-text: #1A1A1A;
+  
+  /* Variables application */
+  --background: var(--neutral-white);
+  --foreground: var(--neutral-text);
+  --sidebar-extended: var(--honshu-blue-medium);
+  --sidebar-collapsed: var(--honshu-blue-light);
+  --modal-header: var(--honshu-blue-medium);
 }
 
 @theme inline {
@@ -13,26 +40,93 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Reset et base */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-y: auto;
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  line-height: 1.5;
+  font-weight: 400;
 }
 
-/* Fix pour les cartes Leaflet partiellement affichées */
+/* Layout principal */
+.fixed {
+  position: fixed;
+}
+
+.inset-0 {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.flex {
+  display: flex;
+}
+
+/* Header de la carte - Style minimaliste */
+.absolute.top-0.left-0.right-0 {
+  background: var(--neutral-white);
+  border-bottom: 1px solid var(--neutral-medium);
+  padding: 20px 24px;
+}
+
+.absolute.top-0.left-0.right-0 h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--honshu-blue-deep);
+  margin: 0 0 4px 0;
+  letter-spacing: -0.01em;
+}
+
+.absolute.top-0.left-0.right-0 p {
+  color: var(--neutral-dark);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Bouton toggle sidebar */
+button {
+  background: var(--neutral-white);
+  border: 1px solid var(--neutral-medium);
+  padding: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+button:hover:not(:disabled) {
+  background: var(--neutral-light);
+  border-color: var(--honshu-blue-medium);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Carte Leaflet */
 .leaflet-container {
   height: 100% !important;
   width: 100% !important;
+  background-color: var(--honshu-blue-ghost) !important;
+  position: relative !important;
 }
 
-/* Assure-toi que les tuiles se chargent correctement */
 .leaflet-tile {
   max-width: none !important;
 }
@@ -41,30 +135,388 @@ body {
   pointer-events: auto !important;
 }
 
-/* CORRECTION : Z-index pour les modals au-dessus de Leaflet */
-/* Leaflet utilise des z-index très élevés (1000+), il faut être au-dessus */
-.modal-overlay {
-  z-index: 9999 !important;
+/* Supprimer les bordures et arrondis par défaut */
+.border {
+  border: none !important;
 }
 
-.modal-content {
-  z-index: 10000 !important;
+.rounded-xl {
+  border-radius: 0 !important;
 }
 
-/* Alternative : classe utilitaire Tailwind renforcée */
+/* Sidebar - État étendu */
+.sidebar-full {
+  background: var(--honshu-blue-medium);
+  color: var(--neutral-white);
+}
+
+.sidebar-full h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-full .bg-white\/20 {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Barre de Search */
+.sidebar-full input[type="text"] {
+  width: 100%;
+  padding: 12px 16px 12px 40px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: var(--neutral-white);
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 0;
+  z-index: 10;
+  position: relative;
+}
+
+.sidebar-full input[type="text"]:focus {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  z-index: 11;
+}
+
+.sidebar-full input[type="text"]::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Fix pour mobile - assurer que l'input est interactable */
+.sidebar-full .relative {
+  position: relative;
+  z-index: 10;
+}
+
+.sidebar-full .absolute {
+  pointer-events: none;
+}
+
+.sidebar-full .absolute.right-3 {
+  pointer-events: auto;
+}
+
+/* Sidebar - État réduit */
+.sidebar-squized {
+  background: var(--honshu-blue-light);
+  color: var(--neutral-white);
+}
+
+/* Liste des pays */
+.bg-gray-50 {
+  background: var(--neutral-light) !important;
+}
+
+.border-gray-100 {
+  border-color: var(--neutral-medium) !important;
+}
+
+.border-gray-50 {
+  border-color: var(--neutral-light) !important;
+}
+
+/* En-têtes de région */
+.bg-gray-50.px-6.py-3 {
+  background: var(--honshu-blue-pale) !important;
+}
+
+.bg-gray-50.px-6.py-3 h3 {
+  color: var(--honshu-blue-deep) !important;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Items de pays */
+.p-4.border-b.border-gray-50.cursor-pointer {
+  border-bottom: 1px solid var(--neutral-light);
+  transition: background-color 0.15s ease;
+}
+
+.p-4.border-b.border-gray-50.cursor-pointer:hover {
+  background: var(--honshu-blue-ghost);
+}
+
+/* Layout pays : nom et code sur la même ligne */
+.p-4.border-b.border-gray-50.cursor-pointer .flex-1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.p-4.border-b.border-gray-50.cursor-pointer .flex-1 > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.p-4.border-b.border-gray-50.cursor-pointer .flex-1 .ml-7 {
+  margin-left: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Pays sélectionné */
+.bg-orange-50 {
+  background: var(--honshu-coral-pale) !important;
+}
+
+.border-l-orange-500 {
+  border-left-color: var(--honshu-coral-primary) !important;
+}
+
+/* Textes dans la liste */
+.text-gray-800 {
+  color: var(--honshu-blue-deep) !important;
+}
+
+.text-gray-600 {
+  color: var(--neutral-dark) !important;
+}
+
+.text-gray-500 {
+  color: var(--neutral-dark) !important;
+}
+
+/* Modal */
 .z-modal-overlay {
   z-index: 9999 !important;
+  pointer-events: none !important;
 }
 
 .z-modal-content {
   z-index: 10000 !important;
+  pointer-events: auto !important;
 }
 
-/* Leaflet popup et contrôles restent en dessous des modals */
+.modal-header {
+  background: var(--honshu-blue-medium);
+  padding: 24px;
+  color: var(--neutral-white);
+}
+
+.modal-header h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.02em;
+}
+
+.modal-header button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: var(--neutral-white);
+  padding: 8px;
+}
+
+.modal-header button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Contenu modal */
+.bg-gray-50.rounded-lg.p-5 {
+  background: var(--neutral-ghost) !important;
+  border: 1px solid var(--neutral-light);
+  padding: 20px !important;
+}
+
+.bg-blue-100 {
+  background: var(--honshu-blue-pale) !important;
+}
+
+.text-blue-600 {
+  color: var(--honshu-blue-primary) !important;
+}
+
+.bg-purple-100 {
+  background: var(--honshu-coral-pale) !important;
+}
+
+.text-purple-600 {
+  color: var(--honshu-coral-primary) !important;
+}
+
+.bg-green-100 {
+  background: var(--honshu-blue-pale) !important;
+}
+
+.text-green-600 {
+  color: var(--honshu-blue-primary) !important;
+}
+
+.bg-red-100 {
+  background: var(--honshu-coral-pale) !important;
+}
+
+.text-red-600 {
+  color: var(--honshu-coral-primary) !important;
+}
+
+/* Cartes d'information latérale */
+.bg-white.border {
+  background: var(--neutral-white);
+  border: 1px solid var(--neutral-medium) !important;
+  transition: border-color 0.2s ease;
+}
+
+.bg-white.border:hover {
+  border-color: var(--honshu-blue-light) !important;
+}
+
+/* Icônes colorées */
+.text-orange-500 {
+  color: var(--honshu-coral-primary) !important;
+}
+
+.text-blue-500 {
+  color: var(--honshu-blue-primary) !important;
+}
+
+.text-green-500 {
+  color: var(--honshu-blue-primary) !important;
+}
+
+.text-purple-500 {
+  color: var(--honshu-coral-primary) !important;
+}
+
+.text-indigo-500 {
+  color: var(--honshu-blue-primary) !important;
+}
+
+/* Leaflet contrôles */
 .leaflet-popup-pane {
   z-index: 600 !important;
 }
 
 .leaflet-control-container {
   z-index: 800 !important;
+}
+
+.leaflet-tooltip {
+  background: var(--neutral-white) !important;
+  color: var(--honshu-blue-deep) !important;
+  border: 1px solid var(--neutral-medium) !important;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.leaflet-tooltip-top:before {
+  border-top-color: var(--neutral-white) !important;
+}
+
+/* Animations et transitions */
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+.transition-colors {
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+/* États de chargement */
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* États d'erreur */
+.bg-red-50 {
+  background: var(--honshu-coral-ghost) !important;
+}
+
+.text-red-600 {
+  color: var(--honshu-coral-primary) !important;
+}
+
+.text-red-500 {
+  color: var(--honshu-coral-primary) !important;
+}
+
+/* Overlay pays sélectionné */
+.absolute.top-24.left-6 {
+  background: var(--neutral-white);
+  border: 1px solid var(--neutral-medium);
+  padding: 16px;
+  max-width: 280px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar-full {
+    width: 100% !important;
+    max-height: 50vh;
+  }
+  
+  .absolute.top-0.left-0.right-0 {
+    padding: 16px;
+  }
+  
+  .absolute.top-0.left-0.right-0 h1 {
+    font-size: 20px;
+  }
+}
+
+/* Performance optimizations */
+.scrollable-modal {
+  will-change: transform, top;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Debug helpers (à supprimer en production) */
+.debug-scroll {
+  border: 2px solid var(--honshu-coral-primary) !important;
+  background: rgba(232, 90, 79, 0.1) !important;
+}
+
+/* Poignée du bottom sheet */
+.sheet-grip { display: flex; justify-content: center; align-items: center; padding: 10px 0 6px; cursor: ns-resize; background-color: #7b9fe0; }
+.sheet-grip-bar { width: 48px; height: 4px; border-radius: 999px; background: rgba(0,0,0,0.18); }
+
+/* Optionnel: utilitaire pour accélérer le composant */
+.scrollable-modal { will-change: height, transform; backface-visibility: hidden; transform: translateZ(0); }
+
+
+/* ADMIN*/
+
+.logo{
+  padding: 56px;
+  background-color: #FFFFFF;
 }

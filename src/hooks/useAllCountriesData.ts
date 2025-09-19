@@ -32,7 +32,7 @@ export const useAllCountries = (): UseAllCountriesReturn => {
         .order('name_fr', { ascending: true });
 
       if (supabaseError) {
-        throw new Error(`Erreur lors du chargement: ${supabaseError.message}`);
+        throw new Error(`Loading error: ${supabaseError.message}`);
       }
 
       // Transformation des données avec vérification
@@ -50,7 +50,7 @@ export const useAllCountries = (): UseAllCountriesReturn => {
 
     } catch (err: any) {
       console.error('Error fetching countries:', err);
-      setError(err.message || 'Erreur inconnue lors du chargement des pays');
+      setError(err.message || 'Unknown error loading countries');
       setCountries([]);
     } finally {
       setLoading(false);

@@ -49,7 +49,7 @@ export const useCountryDetails = (iso3: string): UseCountryDetailsReturn => {
 
     } catch (err: any) {
       console.error('Error fetching country details:', err);
-      setError(err.message || 'Erreur lors du chargement des détails du pays');
+      setError(err.message || 'Loading error des détails du pays');
       setCountryData(null);
     } finally {
       setLoading(false);
