@@ -325,11 +325,11 @@ export default function MapView({ scoresByIso3, onCountryClick, zoomToCountry }:
         center={[0, 20]}  // Centré sur l'Afrique : latitude 0°, longitude 20°E
         zoom={3}          // Zoom plus proche pour voir l'Afrique entière
         minZoom={2}       // Zoom minimum adapté pour éviter de trop dézoomer
-        maxZoom={8}       // Limite le zoom maximum si besoin
+        maxZoom={5}       // Limite le zoom maximum si besoin
         style={{ height: "100%", width: "100%" }}
         worldCopyJump
         // IMPORTANT: Définir une couleur de fond pour la carte
-        className="bg-white"
+        className="#f4f6f6"
       >
         {/* Corrige les tailles quand les layouts se stabilisent / quand les données arrivent */}
         <UseAutosize deps={[worldData]} />

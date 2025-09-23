@@ -13,7 +13,7 @@ interface CountryModalProps {
 
 /** Hauteurs en vh pour la feuille */
 const MIN_VH = 50;   // hauteur compacte (état initial — cf. screenshot 1)
-const MAX_VH = 92;   // quasi plein écran (état final — cf. screenshot 2)
+const MAX_VH = 100;   // quasi plein écran (état final — cf. screenshot 2)
 const STEP_VH = 10;  // incrément via molette
 const DRAG_SENS = 0.35; // sensibilité du drag (px -> vh)
 
@@ -222,11 +222,14 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
             </div>
           ) : (
             <div className="p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Colonne principale */}
-                <div className="lg:col-span-2 space-y-6">
+              {/* Layout 2/3 – 1/3 (mobile: 1 colonne) */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+
+                {/* Colonne principale = 2/3 */}
+                <div className="md:col-span-8 space-y-6 min-w-0 colonne-principale">
+                  <div className="background-left"></div>
                   {mediaData?.legal_environment && (
-                    <div className="bg-gray-50 rounded-lg p-5">
+                    <div className="bg-gray-50 p-5 rounded-xl">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="p-2 bg-blue-100 rounded-lg">
                           <Gavel className="w-5 h-5 text-blue-600" />
@@ -238,7 +241,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                   )}
 
                   {mediaData?.media_regulators && (
-                    <div className="bg-gray-50 rounded-lg p-5">
+                    <div className="bg-gray-50 p-5 rounded-xl">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="p-2 bg-purple-100 rounded-lg">
                           <Building className="w-5 h-5 text-purple-600" />
@@ -250,7 +253,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                   )}
 
                   {mediaData?.journalists_associations && (
-                    <div className="bg-gray-50 rounded-lg p-5">
+                    <div className="bg-gray-50 p-5 rounded-xl">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="p-2 bg-green-100 rounded-lg">
                           <Users className="w-5 h-5 text-green-600" />
@@ -262,7 +265,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                   )}
 
                   {mediaData?.internet_freedom && (
-                    <div className="bg-gray-50 rounded-lg p-5">
+                    <div className="bg-gray-50 p-5 rounded-xl">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="p-2 bg-red-100 rounded-lg">
                           <Shield className="w-5 h-5 text-red-600" />
@@ -274,10 +277,10 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                   )}
                 </div>
 
-                {/* Sidebar */}
-                <div className="space-y-4">
+                {/* Sidebar = 1/3 (option: sticky dans le modal) */}
+                <aside className="md:col-span-4 space-y-4 lg:sticky lg:top-4">
                   {mediaData?.radio_stations && (
-                    <div className="bg-white border rounded-lg p-4">
+                    <div className="bg-white p-4 titre-sidebar">
                       <div className="flex items-center gap-3 mb-3">
                         <Radio className="w-5 h-5 text-orange-500" />
                         <h4 className="font-semibold">Radio Stations</h4>
@@ -287,7 +290,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                   )}
 
                   {mediaData?.tv_stations && (
-                    <div className="bg-white border rounded-lg p-4">
+                    <div className="bg-white p-4 titre-sidebar">
                       <div className="flex items-center gap-3 mb-3">
                         <Tv className="w-5 h-5 text-blue-500" />
                         <h4 className="font-semibold">TV Stations</h4>
@@ -297,7 +300,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                   )}
 
                   {mediaData?.newspapers && (
-                    <div className="bg-white border rounded-lg p-4">
+                    <div className="bg-white p-4 titre-sidebar">
                       <div className="flex items-center gap-3 mb-3">
                         <Newspaper className="w-5 h-5 text-green-500" />
                         <h4 className="font-semibold">Newspapers</h4>
@@ -307,7 +310,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                   )}
 
                   {mediaData?.online_media && (
-                    <div className="bg-white border rounded-lg p-4">
+                    <div className="bg-white p-4 titre-sidebar">
                       <div className="flex items-center gap-3 mb-3">
                         <Globe className="w-5 h-5 text-purple-500" />
                         <h4 className="font-semibold">Online Media</h4>
@@ -317,7 +320,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                   )}
 
                   {mediaData?.leading_media && (
-                    <div className="bg-white border rounded-lg p-4">
+                    <div className="bg-white p-4 titre-sidebar">
                       <div className="flex items-center gap-3 mb-3">
                         <ExternalLink className="w-5 h-5 text-indigo-500" />
                         <h4 className="font-semibold">Leading Media</h4>
@@ -325,8 +328,10 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                       <p className="text-sm text-gray-600">{mediaData.leading_media}</p>
                     </div>
                   )}
-                </div>
+                </aside>
+
               </div>
+
             </div>
           )}
         </div>
