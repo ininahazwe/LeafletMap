@@ -5,7 +5,7 @@ import { useGetIdentity, useLogout } from "@refinedev/core";
 
 export default function AppHeader() {
   const { data: identity } = useGetIdentity<{ id: string; name?: string }>();
-  const { mutate: logout, isLoading } = useLogout();
+  const { mutate: logout } = useLogout();
 
   return (
     <Layout.Header
@@ -26,7 +26,7 @@ export default function AppHeader() {
         {identity?.name && (
           <Typography.Text type="secondary">{identity.name}</Typography.Text>
         )}
-        <Button onClick={() => logout()} loading={isLoading}>
+        <Button onClick={() => logout()}>
           Logout
         </Button>
       </Space>
