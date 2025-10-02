@@ -2,7 +2,6 @@
 import React, { useMemo } from "react";
 import { Layout, Menu, type MenuProps } from "antd";
 import { useMenu, useGo } from "@refinedev/core";
-import Image from "next/image";
 
 interface MenuItem {
   key?: string;
@@ -20,7 +19,7 @@ export default function AppSider() {
   const items = useMemo<MenuProps["items"]>(() => {
     const mapItems = (list: MenuItem[]): NonNullable<MenuProps["items"]> =>
       (list ?? []).map((i) => {
-        const item: NonNullable<MenuProps["items"]>[number] = {
+        const baseItem = {
           key: i.key ?? i.name ?? i.route ?? '',
           icon: i.icon,
           label: (
@@ -35,18 +34,21 @@ export default function AppSider() {
         };
 
         if (i.children && i.children.length > 0) {
-          item.children = i.children.map((c) => ({
-            key: c.key ?? c.name ?? c.route ?? '',
-            icon: c.icon,
-            label: (
-              <span onClick={() => c.route && go({ to: c.route, type: "push" })}>
-                {c.label ?? c.name}
-              </span>
-            ),
-          }));
+          return {
+            ...baseItem,
+            children: i.children.map((c) => ({
+              key: c.key ?? c.name ?? c.route ?? '',
+              icon: c.icon,
+              label: (
+                <span onClick={() => c.route && go({ to: c.route, type: "push" })}>
+                  {c.label ?? c.name}
+                </span>
+              ),
+            })),
+          };
         }
 
-        return item;
+        return baseItem;
       });
     return mapItems(menuItems);
   }, [menuItems, go]);
