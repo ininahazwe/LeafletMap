@@ -3,9 +3,15 @@
 import { AuthBindings } from "@refinedev/core";
 import { supabase } from "@/lib/supabase";
 
+interface LoginParams {
+  email?: string;
+  password?: string;
+  redirectTo?: string;
+}
+
 export const authProvider: AuthBindings = {
   // Login par lien magique (ou email+password si tu fournis password)
-  login: async (params: any) => {
+  login: async (params: LoginParams) => {
     const { email, password, redirectTo } = params ?? {};
     console.log('Tentative de connexion:', { email, password: '***' });
     try {
@@ -97,7 +103,7 @@ export const authProvider: AuthBindings = {
     return session ? { authenticated: true } : { authenticated: false, redirectTo: "/admin/login" };
   },
 
-  onError: async (error) => ({ error, redirectTo: "/admin/login" }),
+  onError: async (error: Error) => ({ error, redirectTo: "/admin/login" }),
 
   getIdentity: async () => {
     const { data: { user } } = await supabase.auth.getUser();

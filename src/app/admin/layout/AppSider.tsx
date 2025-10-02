@@ -4,32 +4,50 @@ import { Layout, Menu, type MenuProps } from "antd";
 import { useMenu, useGo } from "@refinedev/core";
 import Image from "next/image";
 
+interface MenuItem {
+  key?: string;
+  name?: string;
+  route?: string;
+  icon?: React.ReactNode;
+  label?: string;
+  children?: MenuItem[];
+}
+
 export default function AppSider() {
   const { menuItems, selectedKey, defaultOpenKeys } = useMenu();
   const go = useGo();
 
   const items = useMemo<MenuProps["items"]>(() => {
-    const mapItems = (list: any[]): NonNullable<MenuProps["items"]> =>
-      (list ?? []).map((i) => ({
-        key: i.key ?? i.name ?? i.route,       // clé stable
-        icon: i.icon,
-        label: (
-          <span
-            onClick={() => {
-              if (i.route) go({ to: i.route, type: "push" }); // ✅ navigate
-            }}
-          >
-            {i.label ?? i.name}
-          </span>
-        ),
-        children: i.children ? i.children.map((c: any) => ({
-          key: c.key ?? c.name ?? c.route,
-          icon: c.icon,
-          label: <span onClick={() => c.route && go({ to: c.route, type: "push" })}>
-            {c.label ?? c.name}
-          </span>,
-        })) : undefined,
-      }));
+    const mapItems = (list: MenuItem[]): NonNullable<MenuProps["items"]> =>
+      (list ?? []).map((i) => {
+        const item: NonNullable<MenuProps["items"]>[number] = {
+          key: i.key ?? i.name ?? i.route ?? '',
+          icon: i.icon,
+          label: (
+            <span
+              onClick={() => {
+                if (i.route) go({ to: i.route, type: "push" });
+              }}
+            >
+              {i.label ?? i.name}
+            </span>
+          ),
+        };
+
+        if (i.children && i.children.length > 0) {
+          item.children = i.children.map((c) => ({
+            key: c.key ?? c.name ?? c.route ?? '',
+            icon: c.icon,
+            label: (
+              <span onClick={() => c.route && go({ to: c.route, type: "push" })}>
+                {c.label ?? c.name}
+              </span>
+            ),
+          }));
+        }
+
+        return item;
+      });
     return mapItems(menuItems);
   }, [menuItems, go]);
 
@@ -46,7 +64,7 @@ export default function AppSider() {
         mode="inline"
         selectedKeys={selectedKey ? [selectedKey] : []}
         defaultOpenKeys={defaultOpenKeys}
-        items={items}   // ✅ plus de children JSX
+        items={items}
       />
     </Layout.Sider>
   );

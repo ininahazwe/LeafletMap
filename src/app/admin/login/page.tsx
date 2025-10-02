@@ -134,7 +134,7 @@ export default function Login() {
           paddingTop: "1rem"
         }}>
           <Text type="secondary" style={{ fontSize: "14px" }}>
-            Vous n'avez pas de compte ?{" "}
+            Vous n&apos;avez pas de compte ?{" "}
             <Link href="/admin/auth/register">
               <Text style={{ color: "#1890ff", cursor: "pointer" }}>
                 Créer un compte

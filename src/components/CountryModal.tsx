@@ -258,7 +258,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                         <div className="p-2 bg-green-100 rounded-lg">
                           <Users className="w-5 h-5 text-green-600" />
                         </div>
-                        <h3 className="text-xl font-semibold">Journalists' Associations</h3>
+                        <h3 className="text-xl font-semibold">Journalists&apos; Associations</h3>
                       </div>
                       <p className="text-gray-700 leading-relaxed">{mediaData.journalists_associations}</p>
                     </div>
