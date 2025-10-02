@@ -48,9 +48,9 @@ export const useAllCountries = (): UseAllCountriesReturn => {
 
       setCountries(transformedData);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching countries:', err);
-      setError(err.message || 'Unknown error loading countries');
+      setError(err instanceof Error ? err.message : 'Unknown error loading countries');
       setCountries([]);
     } finally {
       setLoading(false);

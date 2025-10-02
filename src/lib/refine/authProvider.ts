@@ -51,7 +51,7 @@ export const authProvider: AuthBindings = {
         };
       }
       return { success: false, error: new Error("Email requis") };
-    } catch (e: any) {
+    } catch (e: unknown) {
       return { success: false, error: e };
     }
   },

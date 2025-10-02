@@ -1,5 +1,5 @@
 // hooks/useCountryDetails.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback  } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { CountryWithMedia } from '../app/types/database';
 
@@ -15,7 +15,7 @@ export const useCountryDetails = (iso3: string): UseCountryDetailsReturn => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchCountryDetails = async () => {
+  const fetchCountryDetails = useCallback(async () => {
     if (!iso3) {
       setCountryData(null);
       return;
@@ -25,7 +25,6 @@ export const useCountryDetails = (iso3: string): UseCountryDetailsReturn => {
     setError(null);
 
     try {
-      // Récupérer le pays avec media_environment uniquement
       const { data: countryWithMedia, error: countryError } = await supabase
         .from('countries')
         .select(`
@@ -39,26 +38,25 @@ export const useCountryDetails = (iso3: string): UseCountryDetailsReturn => {
         throw new Error(`Pays introuvable pour ISO3 "${iso3}": ${countryError.message}`);
       }
 
-      // Construire l'objet final (simplifié)
       const completeData: CountryWithMedia = {
         ...countryWithMedia,
-        media_environment: countryWithMedia.media_environment || null
+        media_environment: countryWithMedia.media_environment ?? null
       };
 
       setCountryData(completeData);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching country details:', err);
-      setError(err.message || 'Loading error des détails du pays');
+      setError(err instanceof Error ? err.message : 'Loading error des détails du pays');
       setCountryData(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, [iso3]);
 
   useEffect(() => {
     fetchCountryDetails();
-  }, [iso3]);
+  }, [fetchCountryDetails]);
 
   return {
     countryData,

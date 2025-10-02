@@ -49,7 +49,7 @@ export default function ResetPassword() {
           router.push("/admin/login");
         }, 2000);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       message.error("Une erreur est survenue. Veuillez réessayer.");
     } finally {
       setLoading(false);

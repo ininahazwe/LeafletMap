@@ -26,7 +26,7 @@ export default function ForgotPassword() {
         setEmailSent(true);
         message.success("Un lien de réinitialisation a été envoyé à votre email");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       message.error("Une erreur est survenue. Veuillez réessayer.");
     } finally {
       setLoading(false);

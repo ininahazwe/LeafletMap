@@ -16,16 +16,20 @@ export default function AuthCallback() {
       try {
         // 1) Flow implicite (tokens dans le hash URL)
         if (typeof window !== "undefined" && window.location.hash.includes("access_token")) {
-          const getSessionFromUrl = (supabase.auth as any).getSessionFromUrl;
-          if (typeof getSessionFromUrl === "function") {
-            const { error } = await getSessionFromUrl({ storeSession: true }); // stocke la session
+          // Vérification typée de l'existence de la méthode
+          const auth = supabase.auth as {
+            getSessionFromUrl?: (options: { storeSession: boolean }) => Promise<{ error: Error | null }>;
+          };
+          
+          if (typeof auth.getSessionFromUrl === "function") {
+            const { error } = await auth.getSessionFromUrl({ storeSession: true });
             if (error) throw error;
           } else {
             // Fallback (rare) : parse & set
             const h = new URLSearchParams(window.location.hash.replace(/^#/, ""));
             const access_token = h.get("access_token");
             const refresh_token = h.get("refresh_token");
-            if (!access_token || !refresh_token) throw new Error("Tokens manquants dans l’URL.");
+            if (!access_token || !refresh_token) throw new Error("Tokens manquants dans l'URL.");
             const { error } = await supabase.auth.setSession({ access_token, refresh_token });
             if (error) throw error;
           }
@@ -47,9 +51,9 @@ export default function AuthCallback() {
         }
 
         throw new Error("Lien invalide ou incomplet.");
-      } catch (e: any) {
+      } catch (e: unknown) {
         setState("error");
-        setMsg(e?.message ?? "Échec de connexion.");
+        setMsg(e instanceof Error ? e.message : "Échec de connexion.");
       }
     })();
   }, [params, router]);

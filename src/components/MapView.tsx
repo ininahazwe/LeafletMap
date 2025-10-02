@@ -7,7 +7,7 @@ import type { FeatureCollection, Geometry } from "geojson";
 
 // Fix des icônes Leaflet dans Next.js
 if (typeof window !== "undefined") {
-  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
   L.Icon.Default.mergeOptions({
     iconRetinaUrl:
       "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
@@ -25,7 +25,7 @@ type Props = {
 };
 
 /** Invalidate la taille après montage/changements (corrige les rendus partiels) */
-function UseAutosize({ deps = [] as any[] }) {
+function UseAutosize({ deps = [] as unknown[] }) {
   const map = useMap();
   useEffect(() => {
     const t1 = setTimeout(() => map.invalidateSize(), 100);
@@ -100,7 +100,7 @@ const ISO_KEYS = [
   "BRK_A3",
 ] as const;
 
-function getISO3(props: any): string {
+function getISO3(props: Record<string, unknown>): string {
   for (const k of ISO_KEYS) {
     const v = props?.[k];
     if (v) return String(v).toUpperCase();
@@ -114,7 +114,7 @@ function AutoZoomToCountry({
   worldRef 
 }: { 
   zoomToCountry?: string;
-  worldRef: React.RefObject<L.GeoJSON<any> | null>;
+  worldRef: React.RefObject<L.GeoJSON | null>;
 }) {
   const map = useMap();
   
@@ -126,9 +126,9 @@ function AutoZoomToCountry({
     
     // Chercher la couche correspondant au pays
     layer.eachLayer((subLayer: L.Layer) => {
-      const feature = (subLayer as any).feature;
+      const feature = (subLayer as L.Layer & { feature?: { properties?: Record<string, unknown> } }).feature;
       if (feature) {
-        const iso3 = getISO3(feature.properties);
+        const iso3 = getISO3(feature.properties ?? {});
         if (iso3 === zoomToCountry.toUpperCase()) {
           targetLayer = subLayer;
         }
@@ -137,7 +137,7 @@ function AutoZoomToCountry({
     
     // Zoomer sur le pays trouvé
     if (targetLayer) {
-      const bounds = (targetLayer as any).getBounds();
+      const bounds = (targetLayer as L.Layer & { getBounds?: () => L.LatLngBounds }).getBounds?.();
       if (bounds && bounds.isValid()) {
         setTimeout(() => {
           map.fitBounds(bounds, { 
@@ -162,7 +162,7 @@ function useMapReference() {
 type CountryInteractionsProps = { 
   worldData: FeatureCollection<Geometry>;
   scoresByIso3: Record<string, number | undefined>;
-  worldRef: React.RefObject<L.GeoJSON<any> | null>;
+  worldRef: React.RefObject<L.GeoJSON | null>;
   onCountryClick?: (iso3: string) => void;
 };
 
@@ -175,37 +175,41 @@ function CountryInteractions({
 }: CountryInteractionsProps) {
   const map = useMapReference();
 
-  const styleFn = (feat: any): L.PathOptions => {
-    const iso3 = getISO3(feat?.properties);
+  const styleFn = (feat?: { properties?: Record<string, unknown> }): L.PathOptions => {
+    if (!feat) return { color: "#ffffff", weight: 1, fillColor: "#d4d4d4", fillOpacity: 0.2 };
+    
+    const iso3 = getISO3(feat.properties ?? {});
     const score = scoresByIso3[iso3];
     const hasData = score != null;
     
     return {
-      color: "#ffffff", // Bordure blanche pour délimiter les pays
-      weight: 1, // Légèrement plus épais pour bien voir les frontières
-      fillColor: hasData ? colorForCountry(iso3) : "#d4d4d4", // Couleur unique SEULEMENT si données, sinon gris
-      fillOpacity: hasData ? 1 : 0.2, // Pays sans données très transparents
+      color: "#ffffff",
+      weight: 1,
+      fillColor: hasData ? colorForCountry(iso3) : "#d4d4d4",
+      fillOpacity: hasData ? 1 : 0.2,
     };
   };
 
-  const onEachFeature = (feature: any, layer: Layer) => {
+
+  const onEachFeature = (feature: { properties?: Record<string, unknown> } | undefined, layer: Layer) => {
+    if (!feature) return;
     const props = feature?.properties ?? {};
     const iso3 = getISO3(props);
     const score = scoresByIso3[iso3];
-    const name = props.NAME || props.ADMIN || props.name || iso3;
-
+    const name = (props.NAME as string) || (props.ADMIN as string) || (props.name as string) || iso3;
+  
     // Tooltip adaptatif
     const tooltipContent = score != null 
       ? `<div style="font-weight:600">${name}</div>`
       : `<div style="font-weight:600">${name}</div><div style="color:#999">No data available</div>`;
 
-    (layer as any).bindTooltip(tooltipContent, { sticky: true });
+    (layer as L.Layer & { bindTooltip: (content: string, options?: { sticky?: boolean }) => void }).bindTooltip(tooltipContent, { sticky: true });
 
     // Variables pour gérer les timeouts
     let hoverTimeout: NodeJS.Timeout | null = null;
 
     // Clic seulement si le pays a des données
-    const el = (layer as any).getElement?.() as HTMLElement | undefined;
+    const el = (layer as L.Layer & { getElement?: () => HTMLElement | undefined }).getElement?.();
     layer.on("click", () => {
       if (iso3 && score != null && onCountryClick) { // Vérification score != null
         onCountryClick(iso3);
@@ -220,7 +224,7 @@ function CountryInteractions({
       el.setAttribute("aria-label", score != null ? `Voir ${name}` : `${name} - Aucune donnée`);
       
       if (score != null) {
-        el.addEventListener("keydown", (ev: any) => {
+        el.addEventListener("keydown", (ev: KeyboardEvent) => {
           if (ev.key === "Enter" || ev.key === " ") {
             ev.preventDefault();
             if (onCountryClick) {
@@ -240,7 +244,7 @@ function CountryInteractions({
       if (score != null) { // Vérifie si le pays a des données
         if (hoverTimeout) clearTimeout(hoverTimeout);
         hoverTimeout = setTimeout(() => {
-          const bounds = (layer as any).getBounds();
+          const bounds = (layer as L.Layer & { getBounds?: () => L.LatLngBounds }).getBounds?.();
           if (bounds && bounds.isValid()) {
             map.fitBounds(bounds, { 
               padding: [50, 50], 
@@ -287,7 +291,7 @@ export default function MapView({ scoresByIso3, onCountryClick, zoomToCountry }:
     null
   );
   const [error, setError] = useState<string | null>(null);
-  const worldRef = useRef<L.GeoJSON<any> | null>(null);
+  const worldRef = useRef<L.GeoJSON | null>(null);
 
   // Charger le GeoJSON depuis /public
   useEffect(() => {

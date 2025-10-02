@@ -63,7 +63,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
   const dragStartVh = useRef<number>(MIN_VH);
 
   const region = countryData?.region || "default";
-  const gradientClass = (regionColors as any)[region] || regionColors.default;
+  const gradientClass = regionColors[region as keyof typeof regionColors] || regionColors.default;
   const latestRanking = countryData?.rankings?.[0];
   const mediaData = countryData?.media_environment;
 
