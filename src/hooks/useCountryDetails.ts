@@ -38,12 +38,7 @@ export const useCountryDetails = (iso3: string): UseCountryDetailsReturn => {
         throw new Error(`Pays introuvable pour ISO3 "${iso3}": ${countryError.message}`);
       }
 
-      const completeData: CountryWithMedia = {
-        ...countryWithMedia,
-        media_environment: countryWithMedia.media_environment ?? null
-      };
-
-      setCountryData(completeData);
+      setCountryData(countryWithMedia as CountryWithMedia);
 
     } catch (err: unknown) {
       console.error('Error fetching country details:', err);
