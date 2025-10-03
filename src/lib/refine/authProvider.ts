@@ -1,6 +1,6 @@
 "use client";
 
-import { AuthBindings } from "@refinedev/core";
+import type { AuthProvider } from "@refinedev/core";
 import { supabase } from "@/lib/supabase";
 
 interface LoginParams {
@@ -9,7 +9,7 @@ interface LoginParams {
   redirectTo?: string;
 }
 
-export const authProvider: AuthBindings = {
+export const authProvider: AuthProvider = {
   // Login par lien magique (ou email+password si tu fournis password)
   login: async (params: LoginParams) => {
     const { email, password, redirectTo } = params ?? {};
@@ -21,7 +21,7 @@ export const authProvider: AuthBindings = {
       
           if (error) {
             console.error('Erreur de connexion:', error);
-            return { success: false, error };
+            return { success: false, error: new Error(error.message) };
           }
         
         // Vérifier si l'utilisateur est admin
@@ -50,7 +50,7 @@ export const authProvider: AuthBindings = {
           email,
           options: { emailRedirectTo },
         });
-        if (error) return { success: false, error };
+        if (error) return { success: false, error: new Error(error.message) };
         return {
           success: true,
           successNotification: { message: "Lien envoyé. Vérifiez votre boîte mail." },
@@ -58,7 +58,8 @@ export const authProvider: AuthBindings = {
       }
       return { success: false, error: new Error("Email requis") };
     } catch (e: unknown) {
-      return { success: false, error: e };
+      const errorMessage = e instanceof Error ? e.message : "Erreur de connexion inconnue";
+      return { success: false, error: new Error(errorMessage) };
     }
   },
 
