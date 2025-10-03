@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Result, Spin } from "antd";
 
-export default function AuthCallback() {
+function AuthCallbackContent() {
   const router = useRouter();
   const params = useSearchParams();
   const [state, setState] = useState<"loading" | "ok" | "error">("loading");
@@ -69,4 +69,12 @@ export default function AuthCallback() {
     );
   }
   return null;
+}
+
+export default function AuthCallback() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}><Spin /></div>}>
+      <AuthCallbackContent />
+    </Suspense>
+  );
 }
