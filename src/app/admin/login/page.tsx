@@ -1,27 +1,32 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Form, Input, Button, Card, Typography, message, Checkbox } from "antd";
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
 import { useLogin } from "@refinedev/core";
 import Link from "next/link";
-import { useState } from "react";
 
 const { Title, Text } = Typography;
 
 export default function Login() {
   const [form] = Form.useForm();
-  const { mutate: login, isLoading } = useLogin();
+  const { mutate: login } = useLogin();
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = (values: { email: string; password: string }) => {
+    setIsLoading(true);
     login({
       email: values.email,
       password: values.password,
       redirectTo: "/admin"
     }, {
       onError: (error) => {
+        setIsLoading(false);
         message.error(error.message || "Erreur de connexion");
+      },
+      onSuccess: () => {
+        setIsLoading(false);
       }
     });
   };
