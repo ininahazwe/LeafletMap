@@ -5,6 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Result, Spin } from "antd";
 
+// Désactiver le pre-rendering statique pour cette page
+export const dynamic = 'force-dynamic';
+
 function AuthCallbackContent() {
   const router = useRouter();
   const params = useSearchParams();
