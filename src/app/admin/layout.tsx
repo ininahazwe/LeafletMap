@@ -9,6 +9,7 @@ import {
   AuthPage 
 } from "@refinedev/antd";
 import { ConfigProvider, Layout as AntdLayout, App, Spin } from "antd";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@refinedev/antd/dist/reset.css";
 import "@ant-design/v5-patch-for-react-19";
 import routerBindings from "@refinedev/nextjs-router";
@@ -19,6 +20,15 @@ import AppSider from "@/app/admin/layout/AppSider";
 import AppHeader from "@/app/admin/layout/AppHeader";
 
 export const dynamic = 'force-dynamic';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: false,
+    },
+  },
+});
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -82,12 +92,14 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense fallback={
-      <div style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
-        <Spin size="large" />
-      </div>
-    }>
-      <AdminLayoutContent>{children}</AdminLayoutContent>
-    </Suspense>
+    <QueryClientProvider client={queryClient}>
+      <Suspense fallback={
+        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
+          <Spin size="large" />
+        </div>
+      }>
+        <AdminLayoutContent>{children}</AdminLayoutContent>
+      </Suspense>
+    </QueryClientProvider>
   );
 }
