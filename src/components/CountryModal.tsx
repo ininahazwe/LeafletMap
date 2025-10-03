@@ -64,7 +64,6 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
 
   const region = countryData?.region || "default";
   const gradientClass = regionColors[region as keyof typeof regionColors] || regionColors.default;
-  const latestRanking = countryData?.rankings?.[0];
   const mediaData = countryData?.media_environment;
 
   // Ouverture : repartir du format compact
@@ -189,12 +188,6 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
               </h2>
               <div className="flex items-center gap-4 text-white text-opacity-90">
                 <span>{countryData?.region || "—"} • Media Environment</span>
-                {latestRanking && (
-                  <span className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
-                    Position {latestRanking.position} • Score{" "}
-                    {latestRanking.score_global?.toFixed(1)} ({latestRanking.year})
-                  </span>
-                )}
               </div>
             </div>
           </div>
