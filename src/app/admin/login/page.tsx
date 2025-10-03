@@ -116,7 +116,7 @@ export default function Login() {
             >
               Se souvenir de moi
             </Checkbox>
-            <Link href="/admin/auth/forgot-password">
+            <Link href="/admin/reset-password">
               <Text type="secondary" style={{ cursor: "pointer", fontSize: "14px" }}>
                 Mot de passe oublié ?
               </Text>
