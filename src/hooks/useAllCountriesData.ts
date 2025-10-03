@@ -10,6 +10,14 @@ interface UseAllCountriesReturn {
   refetch: () => void;
 }
 
+interface SupabaseCountryRow {
+  id: number;
+  iso_a3: string;
+  name_fr: string | null;
+  name_en: string | null;
+  region: string | null;
+}
+
 export const useAllCountries = (): UseAllCountriesReturn => {
   const [countries, setCountries] = useState<CountryListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,14 +44,14 @@ export const useAllCountries = (): UseAllCountriesReturn => {
       }
 
       // Transformation des données avec vérification
-      const transformedData: CountryListItem[] = (data || [])
+      const transformedData: CountryListItem[] = ((data as SupabaseCountryRow[]) || [])
         .filter(item => item.iso_a3)
         .map(item => ({
           id: item.id,
           iso_a3: item.iso_a3,
-          name_fr: item.name_fr,
-          name_en: item.name_en,
-          region: item.region
+          name_fr: item.name_fr ?? '',
+          name_en: item.name_en ?? '',
+          region: item.region ?? ''
         }));
 
       setCountries(transformedData);
