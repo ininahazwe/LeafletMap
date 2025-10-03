@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { Suspense } from "react";
 import { Refine, Authenticated } from "@refinedev/core";
 import { usePathname } from "next/navigation";
 import { 
@@ -8,7 +8,7 @@ import {
   useNotificationProvider,
   AuthPage 
 } from "@refinedev/antd";
-import { ConfigProvider, Layout as AntdLayout, App } from "antd";
+import { ConfigProvider, Layout as AntdLayout, App, Spin } from "antd";
 import "@refinedev/antd/dist/reset.css";
 import "@ant-design/v5-patch-for-react-19";
 import routerBindings from "@refinedev/nextjs-router";
@@ -20,13 +20,14 @@ import AppHeader from "@/app/admin/layout/AppHeader";
 
 export const dynamic = 'force-dynamic';
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAuthRoute = pathname?.startsWith("/admin/auth") || pathname?.startsWith("/admin/login");
 
   if (isAuthRoute) {
-    return children; // Pas de wrapper Authenticated pour les routes d'auth
+    return children;
   }
+
   return (
     <ConfigProvider theme={RefineThemes.Blue}>
       <Refine
@@ -76,5 +77,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </Authenticated>
       </Refine>
     </ConfigProvider>
+  );
+}
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
+        <Spin size="large" />
+      </div>
+    }>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </Suspense>
   );
 }
