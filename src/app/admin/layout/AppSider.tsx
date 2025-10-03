@@ -3,6 +3,8 @@ import React, { useMemo } from "react";
 import { Layout, Menu, type MenuProps } from "antd";
 import { useMenu, useGo } from "@refinedev/core";
 
+export const dynamic = 'force-dynamic';
+
 interface MenuItem {
   key?: string;
   name?: string;

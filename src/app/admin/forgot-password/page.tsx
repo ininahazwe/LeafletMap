@@ -8,6 +8,8 @@ import Link from "next/link";
 
 const { Title, Text } = Typography;
 
+export const dynamic = 'force-dynamic';
+
 export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);

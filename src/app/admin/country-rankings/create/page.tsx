@@ -3,6 +3,8 @@
 import { Create, useForm, useSelect } from "@refinedev/antd";
 import { Form, InputNumber, Select } from "antd";
 
+export const dynamic = 'force-dynamic';
+
 export default function RankingCreate() {
   const { formProps, saveButtonProps } = useForm({ resource: "rankings" });
 

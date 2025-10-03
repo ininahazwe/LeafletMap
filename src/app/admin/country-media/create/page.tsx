@@ -3,6 +3,8 @@
 import { Create, useForm, useSelect } from "@refinedev/antd";
 import { Form, Select, Input } from "antd";
 
+export const dynamic = 'force-dynamic';
+
 export default function MediaEnvCreate() {
   const { formProps, saveButtonProps } = useForm({ resource: "media_environment" });
 

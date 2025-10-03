@@ -3,6 +3,8 @@
 import { Edit, useForm } from "@refinedev/antd";        // ✅ depuis @refinedev/antd
 import { Form, InputNumber, Select, Spin } from "antd";  // ✅ Form d'antd
 
+export const dynamic = 'force-dynamic';
+
 export default function RankingEdit() {
   // refine va récupérer l'id depuis l'URL ([id]) grâce au router provider
   const { formProps, saveButtonProps, formLoading } = useForm({

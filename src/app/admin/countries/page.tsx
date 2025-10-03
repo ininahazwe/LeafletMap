@@ -3,6 +3,8 @@
 import { List, EditButton, CreateButton, useTable } from "@refinedev/antd";
 import { Table } from "antd";
 
+export const dynamic = 'force-dynamic';
+
 type Country = {
   id: number;
   iso_a3: string;

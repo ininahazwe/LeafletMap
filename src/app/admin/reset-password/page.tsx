@@ -7,6 +7,8 @@ import { supabase } from "@/lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic';
+
 const { Title, Text } = Typography;
 
 export default function ResetPassword() {

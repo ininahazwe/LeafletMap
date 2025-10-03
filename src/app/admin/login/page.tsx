@@ -6,6 +6,8 @@ import { MailOutlined, LockOutlined } from "@ant-design/icons";
 import { useLogin } from "@refinedev/core";
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic';
+
 const { Title, Text } = Typography;
 
 export default function Login() {

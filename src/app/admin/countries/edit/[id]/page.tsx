@@ -5,6 +5,8 @@ import { Form, Input, Select } from "antd";
 
 const regions = ["Africa","Americas","Asia","Europe","Oceania"];
 
+export const dynamic = 'force-dynamic';
+
 export default function CountryEdit() {
   const { formProps, saveButtonProps } = useForm({
     resource: "countries",
