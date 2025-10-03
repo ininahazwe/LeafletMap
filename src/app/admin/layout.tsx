@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { Refine, Authenticated } from "@refinedev/core";
+import { usePathname } from "next/navigation";
 import { 
   RefineThemes, 
   ThemedLayout as ThemedLayoutV2, 
@@ -20,6 +21,12 @@ import AppHeader from "@/app/admin/layout/AppHeader";
 export const dynamic = 'force-dynamic';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isAuthRoute = pathname?.startsWith("/admin/auth") || pathname?.startsWith("/admin/login");
+
+  if (isAuthRoute) {
+    return children; // Pas de wrapper Authenticated pour les routes d'auth
+  }
   return (
     <ConfigProvider theme={RefineThemes.Blue}>
       <Refine
