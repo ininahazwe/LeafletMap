@@ -3,6 +3,8 @@
 import { List, EditButton, CreateButton, useTable } from "@refinedev/antd";
 import { Table } from "antd";
 
+export const dynamic = 'force-dynamic';
+
 type Row = {
   id: number;
   country_id: number;
