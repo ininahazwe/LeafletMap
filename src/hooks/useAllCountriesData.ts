@@ -3,8 +3,12 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { CountryListItem } from '../app/types/database';
 
+interface CountryWithTooltip extends CountryListItem {
+  tooltip_info?: string;
+}
+
 interface UseAllCountriesReturn {
-  countries: CountryListItem[];
+  countries: CountryWithTooltip[];
   loading: boolean;
   error: string | null;
   refetch: () => void;
@@ -16,10 +20,11 @@ interface SupabaseCountryRow {
   name_fr: string | null;
   name_en: string | null;
   region: string | null;
+  tooltip_info?: string | null;
 }
 
 export const useAllCountries = (): UseAllCountriesReturn => {
-  const [countries, setCountries] = useState<CountryListItem[]>([]);
+  const [countries, setCountries] = useState<CountryWithTooltip[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,7 +40,8 @@ export const useAllCountries = (): UseAllCountriesReturn => {
           iso_a3,
           name_fr,
           name_en,
-          region
+          region,
+          tooltip_info
         `)
         .order('name_fr', { ascending: true });
 
@@ -44,14 +50,15 @@ export const useAllCountries = (): UseAllCountriesReturn => {
       }
 
       // Transformation des données avec vérification
-      const transformedData: CountryListItem[] = ((data as SupabaseCountryRow[]) || [])
+      const transformedData: CountryWithTooltip[] = ((data as SupabaseCountryRow[]) || [])
         .filter(item => item.iso_a3)
         .map(item => ({
           id: item.id,
           iso_a3: item.iso_a3,
           name_fr: item.name_fr ?? '',
           name_en: item.name_en ?? '',
-          region: item.region ?? ''
+          region: item.region ?? '',
+          tooltip_info: item.tooltip_info ?? undefined
         }));
 
       setCountries(transformedData);

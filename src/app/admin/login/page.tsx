@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { Form, Input, Button, Card, Typography, message, Checkbox } from "antd";
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
-import { useLogin } from "@refinedev/core";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
@@ -11,27 +12,68 @@ export const dynamic = 'force-dynamic';
 const { Title, Text } = Typography;
 
 export default function Login() {
-  
   const [form] = Form.useForm();
-  const { mutate: login } = useLogin();
+  const router = useRouter();
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (values: { email: string; password: string }) => {
+  const handleLogin = async (values: { email: string; password: string }) => {
     setIsLoading(true);
-    login({
-      email: values.email,
-      password: values.password,
-      redirectTo: "/admin"
-    }, {
-      onError: (error) => {
-        setIsLoading(false);
+    
+    try {
+      console.log('Tentative de connexion avec:', values.email);
+      
+      // Connexion avec Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
+
+      console.log('Résultat connexion:', { data, error });
+
+      if (error) {
+        console.error('Erreur Supabase:', error);
         message.error(error.message || "Erreur de connexion");
-      },
-      onSuccess: () => {
         setIsLoading(false);
+        return;
       }
-    });
+
+      if (!data.user) {
+        message.error("Aucun utilisateur trouvé");
+        setIsLoading(false);
+        return;
+      }
+
+      // Vérifier si l'utilisateur est admin
+      console.log('Vérification admin pour user:', data.user.id);
+      
+      const { data: adminData, error: adminError } = await supabase
+        .from('admins')
+        .select('user_id')
+        .eq('user_id', data.user.id)
+        .single();
+
+      console.log('Résultat vérification admin:', { adminData, adminError });
+
+      if (adminError || !adminData) {
+        console.error('Non autorisé:', adminError);
+        await supabase.auth.signOut();
+        message.error("Accès non autorisé. Vous n'êtes pas administrateur.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Succès
+      message.success("Connexion réussie !");
+      
+      // Redirection
+      router.push("/admin/countries");
+      
+    } catch (err) {
+      console.error('Exception:', err);
+      message.error("Une erreur est survenue");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -116,7 +158,7 @@ export default function Login() {
             >
               Se souvenir de moi
             </Checkbox>
-            <Link href="/admin/reset-password">
+            <Link href="/admin/forgot-password">
               <Text type="secondary" style={{ cursor: "pointer", fontSize: "14px" }}>
                 Mot de passe oublié ?
               </Text>

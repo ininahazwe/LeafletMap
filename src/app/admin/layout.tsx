@@ -1,12 +1,11 @@
 "use client";
 import React, { Suspense } from "react";
 import { Refine, Authenticated } from "@refinedev/core";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { 
   RefineThemes, 
   ThemedLayout as ThemedLayoutV2, 
   useNotificationProvider,
-  AuthPage 
 } from "@refinedev/antd";
 import { ConfigProvider, Layout as AntdLayout, App, Spin } from "antd";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -32,11 +31,30 @@ const queryClient = new QueryClient({
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAuthRoute = pathname?.startsWith("/admin/auth") || pathname?.startsWith("/admin/login");
+  const router = useRouter();
+  
+  // Routes qui ne nécessitent pas d'authentification
+  const isAuthRoute = pathname?.startsWith("/admin/auth") || 
+                      pathname?.startsWith("/admin/login") ||
+                      pathname?.startsWith("/admin/forgot-password") ||
+                      pathname?.startsWith("/admin/reset-password");
 
   if (isAuthRoute) {
     return children;
   }
+
+  // Composant de redirection pour les utilisateurs non authentifiés
+  const RedirectToLogin = () => {
+    React.useEffect(() => {
+      router.push("/admin/login");
+    }, []);
+    
+    return (
+      <div style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
+        <Spin size="large" />
+      </div>
+    );
+  };
 
   return (
     <ConfigProvider theme={RefineThemes.Blue}>
@@ -53,12 +71,6 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
             edit: "/admin/countries/edit/:id" 
           },
           { 
-            name: "rankings", 
-            list: "/admin/country-rankings", 
-            create: "/admin/country-rankings/create", 
-            edit: "/admin/country-rankings/edit/:id" 
-          },
-          { 
             name: "media_environment", 
             list: "/admin/country-media", 
             create: "/admin/country-media/create", 
@@ -72,7 +84,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
       >
         <Authenticated
           key="authenticated-inner"
-          fallback={<AuthPage type="login" />}
+          fallback={<RedirectToLogin />}
         >
           <App>
             <ThemedLayoutV2 

@@ -5,6 +5,15 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { Search, X } from "lucide-react";
 
+interface Country {
+  id: number;
+  iso_a3: string;
+  name_fr: string;
+  name_en: string;
+  region?: string | null;
+  tooltip_info?: string; // NOUVEAU
+}
+
 // Hooks & composants existants
 import CountryModal from "@/components/CountryModal";
 import { useAllCountries } from "../hooks/useAllCountriesData";
@@ -42,6 +51,16 @@ export default function Page() {
     setIsModalOpen(false);
     setSidebarOpen(true);
   };
+
+  // NOUVEAU: Construire un mapping des descriptions de tooltip
+  const tooltipInfoByIso3 = useMemo(() => {
+    return countries.reduce((acc, country) => {
+      if (country.tooltip_info) {
+        acc[country.iso_a3.toUpperCase()] = country.tooltip_info;
+      }
+      return acc;
+    }, {} as Record<string, string>);
+  }, [countries]);
 
   // Couleurs/scores démos (inchangé)
   const scoresByIso3 = useMemo(() => {
@@ -113,6 +132,7 @@ export default function Page() {
             scoresByIso3={scoresByIso3}
             onCountryClick={handleCountryClick}
             zoomToCountry={isModalOpen ? selectedCountryIso3 : undefined}
+            tooltipInfoByIso3={tooltipInfoByIso3}
           />
         )}
       </div>
@@ -127,7 +147,7 @@ export default function Page() {
       >
         {/* ETAT DÉPLIÉ — modal fermé */}
         {sidebarOpen && !isModalOpen ? (
-          <div className="rounded-2xl overflow-hidden shadow-xl bg-white">
+          <div className="overflow-hidden shadow-xl bg-white">
             {/* En-tête / champ de recherche (style bleu via classes existantes si voulu) */}
             <div className="p-6 bg-[#e3dccf]">
               <div className="flex items-center justify-between mb-4">

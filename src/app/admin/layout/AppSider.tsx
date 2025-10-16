@@ -2,6 +2,7 @@
 import React, { useMemo } from "react";
 import { Layout, Menu, type MenuProps } from "antd";
 import { useMenu, useGo } from "@refinedev/core";
+import Image from "next/image";
 
 export const dynamic = 'force-dynamic';
 
@@ -62,7 +63,13 @@ export default function AppSider() {
         style={{ height: 64, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
         onClick={() => go({ to: "/admin", type: "push" })}
       >
-        <img src="logo.png" alt="Admin" width={132} height={32} />
+         <Image 
+          src="/logo.png" 
+          alt="Logo" 
+          width={80} 
+          height={40}
+          priority
+        />
       </div>
       <Menu
         mode="inline"

@@ -28,6 +28,8 @@
   /* Variables application */
   --background: var(--neutral-white);
   --background2: #f6f6f6;
+  --ocean: #e8f4f8 ;
+  --map-background: #d1e3f0;
   --header-background: #2c3840;
   --foreground: var(--neutral-text);
   --sidebar-extended: var(--honshu-blue-medium);
@@ -125,7 +127,7 @@ button:disabled {
 .leaflet-container {
   height: 100% !important;
   width: 100% !important;
-  background-color: var(--background2) !important;
+  background-color: var(--ocean) !important;
   position: relative !important;
 }
 
@@ -410,12 +412,18 @@ button:disabled {
   z-index: 800 !important;
 }
 
+/* Ajouter à globals.css - Élargir les tooltips Leaflet */
+
 .leaflet-tooltip {
   background: var(--neutral-white) !important;
   color: var(--honshu-blue-deep) !important;
   border: 1px solid var(--neutral-medium) !important;
   font-weight: 500;
   font-size: 13px;
+  max-width: 360px !important;  /* Élargir le conteneur */
+  width: max-content !important; /* Adapter à la largeur du contenu */
+  padding: 8px 12px !important;  /* Plus d'espace intérieur */
+  border-radius: 6px !important;
 }
 
 .leaflet-tooltip-top:before {
@@ -530,4 +538,11 @@ button:disabled {
 .titre-sidebar{
     border: 2px dashed #eaeaea;
     padding: 18px;
+}
+
+/* Couleur de fond personnalisée pour la carte */
+
+.map-background {
+  /* background-color: #f4f6f6; */
+  background-color: #e8f4f8;
 }

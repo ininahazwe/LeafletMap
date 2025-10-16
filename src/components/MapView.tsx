@@ -22,6 +22,7 @@ type Props = {
   scoresByIso3: Record<string, number | undefined>;
   onCountryClick?: (iso3: string) => void;
   zoomToCountry?: string; // Nouveau prop pour déclencher le zoom
+  tooltipInfoByIso3?: Record<string, string>;
 };
 
 /** Invalidate la taille après montage/changements (corrige les rendus partiels) */
@@ -164,6 +165,7 @@ type CountryInteractionsProps = {
   scoresByIso3: Record<string, number | undefined>;
   worldRef: React.RefObject<L.GeoJSON | null>;
   onCountryClick?: (iso3: string) => void;
+  tooltipInfoByIso3?: Record<string, string>;
 };
 
 /** Composant qui gère les interactions avec les pays */
@@ -171,7 +173,8 @@ function CountryInteractions({
   worldData, 
   scoresByIso3, 
   worldRef,
-  onCountryClick 
+  onCountryClick,
+  tooltipInfoByIso3 = {}
 }: CountryInteractionsProps) {
   const map = useMapReference();
 
@@ -185,7 +188,7 @@ function CountryInteractions({
     return {
       color: "#ffffff",
       weight: 1,
-      fillColor: hasData ? colorForCountry(iso3) : "#d4d4d4",
+      fillColor: hasData ? colorForCountry(iso3) : "#c7dce8",
       fillOpacity: hasData ? 1 : 0.2,
     };
   };
@@ -197,14 +200,24 @@ function CountryInteractions({
     const iso3 = getISO3(props);
     const score = scoresByIso3[iso3];
     const name = (props.NAME as string) || (props.ADMIN as string) || (props.name as string) || iso3;
-  
+    const tooltipInfo = tooltipInfoByIso3[iso3];
+
     // Tooltip adaptatif
+    // Dans onEachFeature, remplacer le tooltipContent :
+
     const tooltipContent = score != null 
-      ? `<div style="font-weight:600">${name}</div>`
-      : `<div style="font-weight:600">${name}</div><div style="color:#999">No data available</div>`;
+      ? `<div style="max-width:240px;">
+           <div style="font-weight:600;color:#1a1a1a;margin-bottom:6px;">${name}</div>
+           ${tooltipInfo ? `<div style="color:#555;font-size:12px;line-height:1.5;word-wrap:break-word;overflow-wrap:break-word;white-space:normal;margin-bottom:6px;">${tooltipInfo}</div>` : ''}
+           <div style="color:#999;font-size:11px;">Click for details</div>
+         </div>`
+      : `<div style="max-width:240px;">
+           <div style="font-weight:600;color:#1a1a1a;margin-bottom:4px;">${name}</div>
+           <div style="color:#999;font-size:12px;">No data available</div>
+         </div>`;
 
     (layer as L.Layer & { bindTooltip: (content: string, options?: { sticky?: boolean }) => void }).bindTooltip(tooltipContent, { sticky: true });
-
+    
     // Variables pour gérer les timeouts
     let hoverTimeout: NodeJS.Timeout | null = null;
 
@@ -237,34 +250,13 @@ function CountryInteractions({
 
     // Interaction survol avec auto-fit SEULEMENT si le pays a des données
     (layer as L.Path).on("mouseover", () => {
-      // Style highlight immédiat
-      (layer as L.Path).setStyle({ weight: 2 }); // Plus visible sans carte d'arrière-plan
-      
-      // Auto-fit avec délai SEULEMENT si le pays a un score (donc des données)
-      if (score != null) { // Vérifie si le pays a des données
-        if (hoverTimeout) clearTimeout(hoverTimeout);
-        hoverTimeout = setTimeout(() => {
-          const bounds = (layer as L.Layer & { getBounds?: () => L.LatLngBounds }).getBounds?.();
-          if (bounds && bounds.isValid()) {
-            map.fitBounds(bounds, { 
-              padding: [50, 50], 
-              duration: 1.2,
-              easeLinearity: 0.1
-            });
-          }
-        }, 1000);
-      }
+      // Juste changer le style du trait, PAS de zoom
+      (layer as L.Path).setStyle({ weight: 2 });
     });
 
     (layer as L.Path).on("mouseout", () => {
-      // Retour style normal
+      // Retour au style normal
       (layer as L.Path).setStyle({ weight: 1 });
-      
-      // Annule l'auto-fit si on quitte avant 1s
-      if (hoverTimeout) {
-        clearTimeout(hoverTimeout);
-        hoverTimeout = null;
-      }
     });
 
     // Cleanup au démontage du layer
@@ -286,7 +278,7 @@ function CountryInteractions({
   );
 }
 
-export default function MapView({ scoresByIso3, onCountryClick, zoomToCountry }: Props) {
+export default function MapView({ scoresByIso3, onCountryClick, zoomToCountry, tooltipInfoByIso3 = {} }: Props) {
   const [worldData, setWorldData] = useState<FeatureCollection<Geometry> | null>(
     null
   );
@@ -330,10 +322,10 @@ export default function MapView({ scoresByIso3, onCountryClick, zoomToCountry }:
         zoom={3}          // Zoom plus proche pour voir l'Afrique entière
         minZoom={2}       // Zoom minimum adapté pour éviter de trop dézoomer
         maxZoom={5}       // Limite le zoom maximum si besoin
-        style={{ height: "100%", width: "100%" }}
+        style={{ height: "100%", width: "100%", backgroundColor: "#e8f4f8" }}
         worldCopyJump
         // IMPORTANT: Définir une couleur de fond pour la carte
-        className="#f4f6f6"
+        className="map-background"
       >
         {/* Corrige les tailles quand les layouts se stabilisent / quand les données arrivent */}
         <UseAutosize deps={[worldData]} />
@@ -353,6 +345,7 @@ export default function MapView({ scoresByIso3, onCountryClick, zoomToCountry }:
               scoresByIso3={scoresByIso3}
               worldRef={worldRef}
               onCountryClick={onCountryClick}
+              tooltipInfoByIso3={tooltipInfoByIso3}
             />
             <AutoZoomToCountry 
               zoomToCountry={zoomToCountry}
