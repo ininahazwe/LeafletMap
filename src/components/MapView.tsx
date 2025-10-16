@@ -188,8 +188,8 @@ function CountryInteractions({
     return {
       color: "#ffffff",
       weight: 1,
-      fillColor: hasData ? colorForCountry(iso3) : "#c7dce8",
-      fillOpacity: hasData ? 1 : 0.2,
+      fillColor: hasData ? colorForCountry(iso3) : "#d1d1d1",
+      fillOpacity: hasData ? 1 : 0.9,
     };
   };
 
