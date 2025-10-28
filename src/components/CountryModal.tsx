@@ -154,8 +154,8 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
           <span className="sheet-grip-bar" />
         </div>
 
-        {/* Header (garde ton habillage existant) */}
-        <div className="modal-header">
+        {/* Header sticky */}
+        <div className="modal-header sticky top-0 left-0 right-0 z-50 shadow-md">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-colors duration-200"

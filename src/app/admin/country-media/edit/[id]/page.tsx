@@ -1,7 +1,9 @@
 "use client";
 
+import RichTextEditor from "@/components/RichTextEditor";
 import { Edit, useForm, useSelect } from "@refinedev/antd";
-import { Form, Select, Input } from "antd";
+import { Form, Select } from "antd";
+
 
 export const dynamic = 'force-dynamic';
 
@@ -22,18 +24,49 @@ export default function MediaEnvEdit() {
   return (
     <Edit saveButtonProps={saveButtonProps}>
       <Form {...formProps} layout="vertical">
-        <Form.Item label="Pays" name={["country_id"]} rules={[{ required: true }]}>
+        <Form.Item
+          label="Pays"
+          name={["country_id"]}
+          rules={[{ required: true }]}
+        >
           <Select showSearch {...countrySelect} />
         </Form.Item>
-        <Form.Item label="Cadre légal" name={["legal_environment"]}><Input.TextArea rows={4} /></Form.Item>
-        <Form.Item label="Régulateurs" name={["media_regulators"]}><Input.TextArea rows={3} /></Form.Item>
-        <Form.Item label="Associations" name={["journalists_associations"]}><Input.TextArea rows={3} /></Form.Item>
-        <Form.Item label="Radio" name={["radio_stations"]}><Input.TextArea rows={3} /></Form.Item>
-        <Form.Item label="TV" name={["tv_stations"]}><Input.TextArea rows={3} /></Form.Item>
-        <Form.Item label="Presse" name={["newspapers"]}><Input.TextArea rows={3} /></Form.Item>
-        <Form.Item label="Médias en ligne" name={["online_media"]}><Input.TextArea rows={3} /></Form.Item>
-        <Form.Item label="Liberté Internet" name={["internet_freedom"]}><Input.TextArea rows={3} /></Form.Item>
-        <Form.Item label="Principaux médias" name={["leading_media"]}><Input.TextArea rows={3} /></Form.Item>
+
+        <Form.Item label="Cadre légal" name={["legal_environment"]}>
+          <RichTextEditor value={undefined} onChange={undefined} />
+        </Form.Item>
+
+        <Form.Item label="Régulateurs" name={["media_regulators"]}>
+          <RichTextEditor value={undefined} onChange={undefined} />
+        </Form.Item>
+
+        <Form.Item label="Associations" name={["journalists_associations"]}>
+          <RichTextEditor value={undefined} onChange={undefined} />
+        </Form.Item>
+
+        <Form.Item label="Radio" name={["radio_stations"]}>
+          <RichTextEditor value={undefined} onChange={undefined} />
+        </Form.Item>
+
+        <Form.Item label="TV" name={["tv_stations"]}>
+          <RichTextEditor value={undefined} onChange={undefined} />
+        </Form.Item>
+
+        <Form.Item label="Presse" name={["newspapers"]}>
+          <RichTextEditor value={undefined} onChange={undefined} />
+        </Form.Item>
+
+        <Form.Item label="Médias en ligne" name={["online_media"]}>
+          <RichTextEditor value={undefined} onChange={undefined} />
+        </Form.Item>
+
+        <Form.Item label="Liberté Internet" name={["internet_freedom"]}>
+          <RichTextEditor value={undefined} onChange={undefined} />
+        </Form.Item>
+
+        <Form.Item label="Principaux médias" name={["leading_media"]}>
+          <RichTextEditor value={undefined} onChange={undefined} />
+        </Form.Item>
       </Form>
     </Edit>
   );

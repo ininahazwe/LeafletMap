@@ -312,6 +312,12 @@ button:disabled {
   background: var(--header-background);
   padding: 24px;
   color: var(--neutral-white);
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .modal-header h2 {
@@ -545,4 +551,10 @@ button:disabled {
 .map-background {
   /* background-color: #f4f6f6; */
   background-color: #e8f4f8;
+}
+
+.leaflet-interactive:focus,
+.leaflet-interactive:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
