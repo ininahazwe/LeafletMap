@@ -32,39 +32,51 @@ export default function MediaEnvEdit() {
           <Select showSearch {...countrySelect} />
         </Form.Item>
 
-        <Form.Item label="Cadre légal" name={["legal_environment"]}>
+        <Form.Item label="Legal environment" name={["legal_environment"]}>
           <RichTextEditor value={undefined} onChange={undefined} />
         </Form.Item>
 
-        <Form.Item label="Régulateurs" name={["media_regulators"]}>
+        <Form.Item label="Media Regulators" name={["media_regulators"]}>
           <RichTextEditor value={undefined} onChange={undefined} />
         </Form.Item>
 
-        <Form.Item label="Associations" name={["journalists_associations"]}>
+        <Form.Item label="Journalists associations" name={["journalists_associations"]}>
           <RichTextEditor value={undefined} onChange={undefined} />
         </Form.Item>
 
-        <Form.Item label="Radio" name={["radio_stations"]}>
+        <Form.Item label="Radio stations" name={["radio_stations"]}>
           <RichTextEditor value={undefined} onChange={undefined} />
         </Form.Item>
 
-        <Form.Item label="TV" name={["tv_stations"]}>
+        <Form.Item label="TV stations" name={["tv_stations"]}>
           <RichTextEditor value={undefined} onChange={undefined} />
         </Form.Item>
 
-        <Form.Item label="Presse" name={["newspapers"]}>
+        <Form.Item label="Newspapers" name={["newspapers"]}>
           <RichTextEditor value={undefined} onChange={undefined} />
         </Form.Item>
 
-        <Form.Item label="Médias en ligne" name={["online_media"]}>
+        <Form.Item label="State-owned media" name={["state_owned_media"]}>
           <RichTextEditor value={undefined} onChange={undefined} />
         </Form.Item>
 
-        <Form.Item label="Liberté Internet" name={["internet_freedom"]}>
+        <Form.Item label="News agency" name={["news_agency"]}>
           <RichTextEditor value={undefined} onChange={undefined} />
         </Form.Item>
 
-        <Form.Item label="Principaux médias" name={["leading_media"]}>
+        <Form.Item label="International media" name={["international_media"]}>
+          <RichTextEditor value={undefined} onChange={undefined} />
+        </Form.Item>
+
+        <Form.Item label="Online media" name={["online_media"]}>
+          <RichTextEditor value={undefined} onChange={undefined} />
+        </Form.Item>
+
+        <Form.Item label="State of internet freedom" name={["internet_freedom"]}>
+          <RichTextEditor value={undefined} onChange={undefined} />
+        </Form.Item>
+
+        <Form.Item label="Leading media" name={["leading_media"]}>
           <RichTextEditor value={undefined} onChange={undefined} />
         </Form.Item>
       </Form>
