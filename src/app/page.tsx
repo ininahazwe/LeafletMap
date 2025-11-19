@@ -109,7 +109,7 @@ export default function Page() {
         <div className="pointer-events-auto px-4 py-3">
           <Image src="/logo.png" width={160} height={44} alt="Logo" />
         </div>
-        <h2 className="text-xl font-bold uppercase leading-5">West Africa<br/> Mediascape</h2>
+        <h2 className="text-xl font-bold capitalize leading-5">West Africa<br/> Mediascape</h2>
       </div>
 
       {/* CARTE plein écran (elle passe entièrement sous les overlays) */}
