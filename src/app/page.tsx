@@ -105,10 +105,11 @@ export default function Page() {
   return (
     <div className="fixed inset-0 bg-white">
       {/* LOGO en haut-gauche (flottant) */}
-      <div className="pointer-events-none fixed top-6 left-6 z-[1400]">
+      <div className="pointer-events-none fixed top-6 left-6 z-[1400] flex items-center">
         <div className="pointer-events-auto px-4 py-3">
           <Image src="/logo.png" width={160} height={44} alt="Logo" />
         </div>
+        <h2 className="text-xl font-bold uppercase leading-5">West Africa<br/> Mediascape</h2>
       </div>
 
       {/* CARTE plein écran (elle passe entièrement sous les overlays) */}
@@ -149,12 +150,12 @@ export default function Page() {
         {sidebarOpen && !isModalOpen ? (
           <div className="overflow-hidden shadow-xl bg-white">
             {/* En-tête / champ de recherche (style bleu via classes existantes si voulu) */}
-            <div className="p-6 bg-[#e3dccf]">
+            <div className="pt-0 pr-6 pb-4 pl-6 bg-[#ffffff]">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Media Environment in West-Africa</h2>
+                
               </div>
 
-              <div className="relative">
+              <div className="relative ok-border rounded-[10px]">
                 <Search
                   className="absolute left-3 top-1/2 -translate-y-1/2"
                   size={18}

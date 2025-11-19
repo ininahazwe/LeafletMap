@@ -185,9 +185,9 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
               <h2 className="text-3xl font-bold">
                 {countryData?.name_fr || countryData?.name_en || iso3}
               </h2>
-              <div className="flex items-center gap-4 text-white text-opacity-90">
+              {/* <div className="flex items-center gap-4 text-white text-opacity-90">
                 <span>{countryData?.region || "—"} • Media Environment</span>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

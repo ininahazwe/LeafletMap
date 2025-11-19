@@ -149,6 +149,10 @@ button:disabled {
   border: none !important;
 }
 
+.ok-border {
+  border: 1px solid lightgrey;
+}
+
 .rounded-xl {
   border-radius: 0 !important;
 }
