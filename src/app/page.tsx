@@ -11,12 +11,14 @@ interface Country {
   name_fr: string;
   name_en: string;
   region?: string | null;
-  tooltip_info?: string; // NOUVEAU
+  tooltip_info?: string;
 }
 
-// Hooks & composants existants
+// Hooks & composants
 import CountryModal from "@/components/CountryModal";
 import { useAllCountries } from "../hooks/useAllCountriesData";
+import AlertCarousel from "@/components/AlertCarousel";
+import { useWordPressAlerts } from "@/hooks/useWordPressAlerts";
 
 const MapView = dynamic(() => import("@/components/MapView"), {
   ssr: false,
@@ -33,11 +35,14 @@ const MapView = dynamic(() => import("@/components/MapView"), {
 export default function Page() {
   const [selectedCountryIso3, setSelectedCountryIso3] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true); // dépliée par défaut quand pas de modal
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Données pays (hook partagé)
+  // Données pays
   const { countries, loading, error } = useAllCountries();
+  
+  // Données WordPress alertes
+  const { alerts, loading: alertsLoading } = useWordPressAlerts();
 
   // Ouvre le modal + replie la sidebar
   const handleCountryClick = (iso3: string) => {
@@ -52,7 +57,7 @@ export default function Page() {
     setSidebarOpen(true);
   };
 
-  // NOUVEAU: Construire un mapping des descriptions de tooltip
+  // Construire un mapping des descriptions de tooltip
   const tooltipInfoByIso3 = useMemo(() => {
     return countries.reduce((acc, country) => {
       if (country.tooltip_info) {
@@ -62,7 +67,7 @@ export default function Page() {
     }, {} as Record<string, string>);
   }, [countries]);
 
-  // Couleurs/scores démos (inchangé)
+  // Scores démos
   const scoresByIso3 = useMemo(() => {
     return countries.reduce((acc, country) => {
       const hash = country.iso_a3.split("").reduce((a, b) => {
@@ -109,10 +114,10 @@ export default function Page() {
         <div className="pointer-events-auto px-4 py-3">
           <Image src="/logo.png" width={160} height={44} alt="Logo" />
         </div>
-        <h2 className="text-xl font-bold capitalize leading-5">West Africa<br/> Mediascape</h2>
+        <h2 className="text-xl font-bold capitalize leading-5">West Africa Mediascape</h2>
       </div>
 
-      {/* CARTE plein écran (elle passe entièrement sous les overlays) */}
+      {/* CARTE plein écran */}
       <div className="absolute inset-0">
         {loading ? (
           <div className="w-full h-full bg-gray-100 animate-pulse flex items-center justify-center">
@@ -138,7 +143,7 @@ export default function Page() {
         )}
       </div>
 
-      {/* SIDEBAR flottante (dépliée ↔︎ repliée) */}
+      {/* SIDEBAR flottante (dépliée ↔️ repliée) */}
       <aside
         className={[
           "fixed right-6 top-6 transition-all duration-300",
@@ -146,10 +151,10 @@ export default function Page() {
           sidebarOpen && !isModalOpen ? "w-96" : "w-[420px]",
         ].join(" ")}
       >
-        {/* ETAT DÉPLIÉ — modal fermé */}
+        {/* ETAT DÉPLIÉ – modal fermé */}
         {sidebarOpen && !isModalOpen ? (
           <div className="overflow-hidden shadow-xl bg-white">
-            {/* En-tête / champ de recherche (style bleu via classes existantes si voulu) */}
+            {/* En-tête / champ de recherche */}
             <div className="pt-0 pr-6 pb-4 pl-6 bg-[#ffffff]">
               <div className="flex items-center justify-between mb-4">
                 
@@ -171,7 +176,7 @@ export default function Page() {
                   <button
                     type="button"
                     style={{ background: "none" }}
-                    onMouseDown={(e) => e.preventDefault()} // évite la perte de focus avant le click
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => setSearchTerm("")}
                     className="absolute right-2 top-1/2 -translate-y-1/2 z-20 hover:text-white"
                     aria-label="Clear"
@@ -183,7 +188,7 @@ export default function Page() {
             </div>
 
             {/* Liste par régions */}
-            <div className="max-h-[70vh] overflow-y-auto">
+            <div className="max-h-[50vh] overflow-y-auto">
               {Object.entries(countriesByRegion).map(([region, list]) => (
                 <div key={region} className="border-b border-gray-100">
                   <div>
@@ -226,7 +231,7 @@ export default function Page() {
             </div>
           </div>
         ) : (
-          // ETAT REPLIÉ — modal ouvert : barre de recherche seule + dropdown dès 3 lettres
+          // ETAT REPLIÉ – modal ouvert
           <div className="relative">
             <div className="rounded-2xl shadow-xl border border-gray-200 bg-white p-3">
               <div className="relative">
@@ -255,7 +260,7 @@ export default function Page() {
               </div>
             </div>
 
-            {/* Dropdown résultats (à partir de 3 caractères) */}
+            {/* Dropdown résultats */}
             {searchTerm.trim().length >= 3 && (
               <div className="absolute mt-2 w-[420px] max-h-[60vh] overflow-y-auto rounded-xl shadow-2xl border border-gray-200 bg-white transition-all duration-200">
                 {filteredCountries.length === 0 ? (
@@ -285,6 +290,14 @@ export default function Page() {
           </div>
         )}
       </aside>
+
+      {/* CAROUSEL D'ALERTES EN BAS */}
+      {!alertsLoading && alerts.length > 0 && (
+        <AlertCarousel 
+          alerts={alerts}
+          isHidden={isModalOpen}
+        />
+      )}
 
       {/* MODAL bottom sheet */}
       <CountryModal

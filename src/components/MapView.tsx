@@ -110,6 +110,7 @@ function getISO3(props: Record<string, unknown>): string {
 }
 
 /** Composant qui gère le zoom automatique sur un pays */
+/** Composant qui gère le zoom automatique sur un pays avec centrage DYNAMIQUE */
 function AutoZoomToCountry({ 
   zoomToCountry, 
   worldRef 
@@ -136,17 +137,31 @@ function AutoZoomToCountry({
       }
     });
     
-    // Zoomer sur le pays trouvé
+    // Zoomer sur le pays trouvé avec centrage dynamique
     if (targetLayer) {
       const bounds = (targetLayer as L.Layer & { getBounds?: () => L.LatLngBounds }).getBounds?.();
       if (bounds && bounds.isValid()) {
         setTimeout(() => {
+          // 🎯 CALCUL DYNAMIQUE de la hauteur réelle du modal
+          const modalElement = document.querySelector('.alert-carousel-container');
+          let modalHeight = 280; // Valeur par défaut
+          
+          if (modalElement) {
+            // Utiliser la hauteur réelle mesurée
+            modalHeight = modalElement.clientHeight;
+          }
+          
+          // Ajouter une marge de sécurité
+          const bottomPadding = modalHeight + 50;
+          
+          // Centrer le pays dans la zone visible (au-dessus du modal)
           map.fitBounds(bounds, { 
-            padding: [50, 50],
-            duration: 1.5, // Animation plus lente pour le zoom modal
+            paddingTopLeft: [50, 50],
+            paddingBottomRight: [50, bottomPadding],
+            duration: 1.5,
             easeLinearity: 0.1
           });
-        }, 300); // Délai pour permettre l'ouverture du modal
+        }, 300);
       }
     }
   }, [zoomToCountry, worldRef, map]);
@@ -209,7 +224,7 @@ function CountryInteractions({
       ? `<div style="max-width:240px;">
            <div style="font-weight:600;color:#1a1a1a;margin-bottom:6px;">${name}</div>
            ${tooltipInfo ? `<div style="color:#555;font-size:12px;line-height:1.5;word-wrap:break-word;overflow-wrap:break-word;white-space:normal;margin-bottom:6px;">${tooltipInfo}</div>` : ''}
-           <div style="color:#999;font-size:11px;">Click for details</div>
+           <div style="color:#999;font-size:11px;">Learn more</div>
          </div>`
       : `<div style="max-width:240px;">
            <div style="font-weight:600;color:#1a1a1a;margin-bottom:4px;">${name}</div>
