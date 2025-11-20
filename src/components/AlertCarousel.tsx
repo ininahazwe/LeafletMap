@@ -7,7 +7,7 @@ import type { WordPressAlert } from '@/hooks/useWordPressAlerts';
 
 interface AlertCarouselProps {
   alerts: WordPressAlert[];
-  isHidden?: boolean; // NOUVEAU : contrôle la visibilité
+  isHidden?: boolean; // Contrôle la visibilité
 }
 
 const formatTime = (dateString: string): string => {
@@ -90,12 +90,14 @@ export default function AlertCarousel({ alerts, isHidden = false }: AlertCarouse
               className="alert-carousel-card"
             >
               {/* Time badge */}
-              <div 
-                className="alert-carousel-time"
-                style={{ backgroundColor: getCategoryColor(alert.category) }}
-              >
-                {formatTime(alert.date)}
-              </div>
+              {alert.countryName && ( 
+                <div 
+                  className="alert-carousel-time"
+                  style={{ backgroundColor: getCategoryColor(alert.category) }}
+                >
+                  {alert.countryName}
+                </div>
+              )}
 
               {/* Card content */}
               <div className="alert-carousel-content">
@@ -109,9 +111,11 @@ export default function AlertCarousel({ alerts, isHidden = false }: AlertCarouse
 
                 {/* Footer */}
                 <div className="alert-carousel-footer">
-                  {alert.country && (
+                  {/* Afficher le nom du pays dynamiquement au lieu du code ISO */}
+                  
+                  {alert.date && (
                     <span className="alert-carousel-country">
-                      {alert.country}
+                      {new Date(alert.date).toLocaleDateString('en-EN')}
                     </span>
                   )}
                   <a

@@ -17,8 +17,10 @@ interface Country {
 // Hooks & composants
 import CountryModal from "@/components/CountryModal";
 import { useAllCountries } from "../hooks/useAllCountriesData";
-import AlertCarousel from "@/components/AlertCarousel";
 import { useWordPressAlerts } from "@/hooks/useWordPressAlerts";
+import AlertCarousel from "@/components/AlertCarousel";
+import AlertCarouselLoader from "@/components/Alertcarouselloader";
+
 
 const MapView = dynamic(() => import("@/components/MapView"), {
   ssr: false,
@@ -40,7 +42,7 @@ export default function Page() {
 
   // Données pays
   const { countries, loading, error } = useAllCountries();
-  
+
   // Données WordPress alertes
   const { alerts, loading: alertsLoading } = useWordPressAlerts();
 
@@ -151,14 +153,12 @@ export default function Page() {
           sidebarOpen && !isModalOpen ? "w-96" : "w-[420px]",
         ].join(" ")}
       >
-        {/* ETAT DÉPLIÉ – modal fermé */}
+        {/* ETAT DÉPLIÉE – modal fermé */}
         {sidebarOpen && !isModalOpen ? (
           <div className="overflow-hidden shadow-xl bg-white">
             {/* En-tête / champ de recherche */}
             <div className="pt-0 pr-6 pb-4 pl-6 bg-[#ffffff]">
-              <div className="flex items-center justify-between mb-4">
-                
-              </div>
+              <div className="flex items-center justify-between mb-4"></div>
 
               <div className="relative ok-border rounded-[10px]">
                 <Search
@@ -207,7 +207,7 @@ export default function Page() {
                             <span
                               className="w-4 h-4 rounded-full border border-gray-300"
                               style={{
-                                backgroundColor:"#ebebeb"
+                                backgroundColor: "#ebebeb",
                               }}
                             />
                             <span className="font-medium text-gray-800">
@@ -292,12 +292,11 @@ export default function Page() {
       </aside>
 
       {/* CAROUSEL D'ALERTES EN BAS */}
-      {!alertsLoading && alerts.length > 0 && (
+    
         <AlertCarousel 
           alerts={alerts}
           isHidden={isModalOpen}
         />
-      )}
 
       {/* MODAL bottom sheet */}
       <CountryModal

@@ -1,4 +1,4 @@
-// hooks/useWordPressAlerts.ts
+// hooks/useWordPressAlerts.ts - VERSION AVEC CARACTÈRES SPÉCIAUX NETTOYÉS
 import { useState, useEffect } from 'react';
 
 export interface WordPressAlert {
@@ -8,83 +8,9 @@ export interface WordPressAlert {
   date: string;
   link: string;
   category: 'urgent' | 'info' | 'report';
-  country?: string; // ISO3 si l'alerte concerne un pays spécifique
+  countryId?: number;
+  countryName?: string;
 }
-
-// Fausses données pour la simulation
-const FAKE_ALERTS: WordPressAlert[] = [
-  {
-    id: 1,
-    title: "Journalist arrested in Mali",
-    excerpt: "A prominent investigative journalist was detained by authorities in Bamako following critical reporting on government corruption.",
-    date: "2025-11-18T14:30:00Z",
-    link: "#",
-    category: "urgent",
-    country: "MLI"
-  },
-  {
-    id: 2,
-    title: "New media law threatens press freedom in Senegal",
-    excerpt: "The National Assembly is debating controversial legislation that would impose heavy penalties on journalists for 'false news'.",
-    date: "2025-11-17T09:15:00Z",
-    link: "#",
-    category: "urgent",
-    country: "SEN"
-  },
-  {
-    id: 3,
-    title: "Ghana launches digital media literacy campaign",
-    excerpt: "The government announces a nationwide initiative to combat misinformation and promote critical thinking among citizens.",
-    date: "2025-11-16T11:00:00Z",
-    link: "#",
-    category: "info",
-    country: "GHA"
-  },
-  {
-    id: 4,
-    title: "Annual West Africa Media Freedom Report 2025",
-    excerpt: "Our comprehensive report shows mixed results: improvements in digital access but rising concerns over journalist safety.",
-    date: "2025-11-15T08:00:00Z",
-    link: "#",
-    category: "report"
-  },
-  {
-    id: 5,
-    title: "Radio station shut down in Guinea",
-    excerpt: "Authorities suspended operations of Radio Liberté citing 'administrative irregularities', raising concerns about media censorship.",
-    date: "2025-11-14T16:45:00Z",
-    link: "#",
-    category: "urgent",
-    country: "GIN"
-  },
-  {
-    id: 6,
-    title: "New internet restrictions in Burkina Faso",
-    excerpt: "The government has implemented bandwidth throttling affecting online media outlets and social media platforms.",
-    date: "2025-11-13T13:20:00Z",
-    link: "#",
-    category: "urgent",
-    country: "BFA"
-  },
-  {
-    id: 7,
-    title: "Training workshop for journalists in Benin",
-    excerpt: "MFWA organized a successful 3-day workshop on investigative journalism techniques and safety protocols.",
-    date: "2025-11-12T10:30:00Z",
-    link: "#",
-    category: "info",
-    country: "BEN"
-  },
-  {
-    id: 8,
-    title: "Côte d'Ivoire strengthens online media regulations",
-    excerpt: "New decree requires all online news platforms to register with the regulatory authority and comply with editorial standards.",
-    date: "2025-11-11T14:00:00Z",
-    link: "#",
-    category: "info",
-    country: "CIV"
-  }
-];
 
 interface UseWordPressAlertsReturn {
   alerts: WordPressAlert[];
@@ -92,6 +18,166 @@ interface UseWordPressAlertsReturn {
   error: string | null;
   urgentCount: number;
   refetch: () => void;
+}
+
+// Cache en mémoire pour les pays
+const countryCache = new Map<number, string>();
+
+// Map complète des entités HTML
+const htmlEntities: Record<string, string> = {
+  '&nbsp;': ' ',
+  '&amp;': '&',
+  '&lt;': '<',
+  '&gt;': '>',
+  '&quot;': '"',
+  '&#039;': "'",
+  '&apos;': "'",
+  '&hellip;': '...',
+  '&ldquo;': '"',
+  '&rdquo;': '"',
+  '&ndash;': '–',
+  '&mdash;': '—',
+  '&lsquo;': "'",
+  '&rsquo;': "'",
+  '&bull;': '•',
+  '&euro;': '€',
+  '&pound;': '£',
+  '&yen;': '¥',
+  '&copy;': '©',
+  '&reg;': '®',
+  '&times;': '×',
+  '&divide;': '÷',
+  '&deg;': '°',
+  '&permil;': '‰',
+  '&dagger;': '†',
+  '&Dagger;': '‡',
+  '&lsaquo;': '‹',
+  '&rsaquo;': '›',
+  '&oline;': '‾',
+  '&frasl;': '⁄',
+  '&weierp;': '℘',
+  '&image;': 'ℑ',
+  '&real;': 'ℜ',
+  '&trade;': '™',
+  '&alefsym;': 'ℵ',
+  '&larr;': '←',
+  '&uarr;': '↑',
+  '&rarr;': '→',
+  '&darr;': '↓',
+  '&harr;': '↔',
+  '&crarr;': '↵',
+};
+
+/**
+ * Nettoie le HTML et décode toutes les entités HTML
+ * Gère aussi les entités numériques: &#160; ou &#x00A0;
+ */
+function stripHtml(html: string): string {
+  if (!html) return '';
+
+  let text = html;
+
+  // Enlever les balises HTML
+  text = text.replace(/<[^>]*>/g, '');
+
+  // Remplacer les entités HTML nommées
+  Object.entries(htmlEntities).forEach(([entity, char]) => {
+    text = text.split(entity).join(char);
+  });
+
+  // Gérer les entités numériques décimales: &#123;
+  text = text.replace(/&#(\d+);/g, (match, num) => {
+    try {
+      return String.fromCharCode(parseInt(num, 10));
+    } catch {
+      return match;
+    }
+  });
+
+  // Gérer les entités numériques hexadécimales: &#x1F;
+  text = text.replace(/&#x([0-9a-fA-F]+);/g, (match, hex) => {
+    try {
+      return String.fromCharCode(parseInt(hex, 16));
+    } catch {
+      return match;
+    }
+  });
+
+  // Nettoyer les espaces multiples et les sauts de ligne
+  text = text
+    .replace(/\s+/g, ' ') // Remplacer les espaces multiples par un
+    .replace(/\n+/g, ' ') // Remplacer les sauts de ligne
+    .trim();
+
+  return text;
+}
+
+function determineCategory(post: any): 'urgent' | 'info' | 'report' {
+  const title = post.title?.rendered?.toLowerCase() || '';
+
+  if (title.includes('report') || title.includes('annual')) {
+    return 'report';
+  }
+
+  if (
+    title.includes('detained') ||
+    title.includes('arrested') ||
+    title.includes('attack') ||
+    title.includes('threat') ||
+    title.includes('violence') ||
+    title.includes('crackdown')
+  ) {
+    return 'urgent';
+  }
+
+  return 'info';
+}
+
+async function fetchCountryName(countryId: number): Promise<string | undefined> {
+  if (countryCache.has(countryId)) {
+    return countryCache.get(countryId);
+  }
+
+  try {
+    const response = await fetch(
+      `https://mfwa.org/wp-json/wp/v2/country/${countryId}`
+    );
+
+    if (!response.ok) {
+      console.warn(`Erreur API pays ${countryId}: ${response.status}`);
+      return undefined;
+    }
+
+    const data = await response.json();
+    const countryName = data.name || data.title?.rendered;
+
+    if (countryName) {
+      countryCache.set(countryId, countryName);
+      return countryName;
+    }
+  } catch (err) {
+    console.error(`Erreur lors de la récupération du pays ${countryId}:`, err);
+  }
+
+  return undefined;
+}
+
+async function resolveCountries(alerts: WordPressAlert[]): Promise<WordPressAlert[]> {
+  const countryIds = new Set<number>();
+  alerts.forEach((alert) => {
+    if (alert.countryId) {
+      countryIds.add(alert.countryId);
+    }
+  });
+
+  const uncachedIds = Array.from(countryIds).filter((id) => !countryCache.has(id));
+
+  await Promise.all(uncachedIds.map((id) => fetchCountryName(id)));
+
+  return alerts.map((alert) => ({
+    ...alert,
+    countryName: alert.countryId ? countryCache.get(alert.countryId) : undefined,
+  }));
 }
 
 export const useWordPressAlerts = (): UseWordPressAlertsReturn => {
@@ -104,17 +190,34 @@ export const useWordPressAlerts = (): UseWordPressAlertsReturn => {
     setError(null);
 
     try {
-      // Simuler un délai réseau
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // En production, ce serait :
-      // const response = await fetch('https://your-wordpress-site.com/wp-json/wp/v2/posts?categories=alerts');
-      // const data = await response.json();
-      
-      setAlerts(FAKE_ALERTS);
+      const response = await fetch(
+        'https://mfwa.org/wp-json/wp/v2/posts?categories=149&per_page=20&_embed'
+      );
+
+      if (!response.ok) {
+        throw new Error(`Erreur API: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      const mappedAlerts: WordPressAlert[] = data.map((post: any) => ({
+        id: post.id,
+        title: stripHtml(post.title?.rendered || 'Sans titre'),
+        excerpt: stripHtml(post.excerpt?.rendered || post.content?.rendered?.substring(0, 200) || ''),
+        date: post.date,
+        link: post.link,
+        category: determineCategory(post),
+        countryId: post.country?.[0],
+      }));
+
+      mappedAlerts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+      const alertsWithCountries = await resolveCountries(mappedAlerts);
+
+      setAlerts(alertsWithCountries);
     } catch (err) {
-      console.error('Error fetching WordPress alerts:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error loading alerts');
+      console.error('Erreur lors du chargement des alertes MFWA:', err);
+      setError(err instanceof Error ? err.message : 'Erreur inconnue lors du chargement des alertes');
       setAlerts([]);
     } finally {
       setLoading(false);
@@ -125,14 +228,13 @@ export const useWordPressAlerts = (): UseWordPressAlertsReturn => {
     fetchAlerts();
   }, []);
 
-  // Compter les alertes urgentes
-  const urgentCount = alerts.filter(a => a.category === 'urgent').length;
+  const urgentCount = alerts.filter((a) => a.category === 'urgent').length;
 
   return {
     alerts,
     loading,
     error,
     urgentCount,
-    refetch: fetchAlerts
+    refetch: fetchAlerts,
   };
 };
