@@ -19,7 +19,6 @@ import CountryModal from "@/components/CountryModal";
 import { useAllCountries } from "../hooks/useAllCountriesData";
 import { useWordPressAlerts } from "@/hooks/useWordPressAlerts";
 import AlertCarousel from "@/components/AlertCarousel";
-import AlertCarouselLoader from "@/components/Alertcarouselloader";
 
 
 const MapView = dynamic(() => import("@/components/MapView"), {
