@@ -89,7 +89,7 @@ function countryNameToISO3(countryName: string): string | undefined {
     'mauritania': 'MRT',
   };
 
-  const normalized = countryName.toLowerCase().trim();
+  const normalized = String(countryName).toLowerCase().trim();
   return countryMap[normalized];
 }
 
@@ -155,7 +155,7 @@ export const useWordPressAlerts = (): UseWordPressAlertsReturn => {
 
     try {
       const response = await fetch(
-          'https://mfwa.org/wp-json/wp/v2/posts?categories=149&per_page=20&_embed'
+          'https://mfwa.org/wp-json/wp/v2/country-highlights?per_page=10&_embed'
       );
 
       if (!response.ok) {
