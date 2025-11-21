@@ -9,6 +9,7 @@ export interface WordPressAlert {
   link: string;
   category: 'urgent' | 'info' | 'report';
   countryIso3?: string;
+  countryName?: string; // ✅ AJOUT pour AlertCarousel
 }
 
 interface UseWordPressAlertsReturn {
@@ -171,6 +172,8 @@ export const useWordPressAlerts = (): UseWordPressAlertsReturn => {
         link: post.link,
         category: determineCategory(post),
         countryIso3: extractCountryISO3(post),
+        // countryName sera ajouté par page.tsx via le mapping avec la base countries
+        countryName: post.country || undefined,
       }));
 
       mappedAlerts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
