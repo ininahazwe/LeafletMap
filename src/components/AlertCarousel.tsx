@@ -61,9 +61,9 @@ export default function AlertCarousel({ alerts, isHidden = false }: AlertCarouse
       {/* Header */}
       <div className="alert-carousel-header">
         <h2 className="alert-carousel-title">Media Alerts</h2>
-        <div className="alert-carousel-badge">
-          {alerts.length} update{alerts.length > 1 ? 's' : ''}
-        </div>
+        {/*<div className="alert-carousel-badge">*/}
+        {/*  {alerts.length} update{alerts.length > 1 ? 's' : ''}*/}
+        {/*</div>*/}
       </div>
 
       {/* Carousel wrapper */}

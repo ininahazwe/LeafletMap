@@ -228,7 +228,9 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                         </div>
                         <h3 className="text-xl font-semibold">Legal Environment</h3>
                       </div>
-                      <p className="text-gray-700 leading-relaxed">{parse(mediaData.legal_environment)}</p>
+                      <div className="text-gray-700 leading-relaxed">
+                        {parse(mediaData.legal_environment)}
+                      </div>
                     </div>
                   )}
 

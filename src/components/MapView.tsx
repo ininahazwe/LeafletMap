@@ -209,7 +209,7 @@ function CountryInteractions({
     // Tooltip adaptatif
     const tooltipInfo = tooltipInfoByIso3?.[iso3];
     const tooltipContent = score != null
-        ? `<div style="font-weight:600">${name}</div>${tooltipInfo ? `<div style="color:#666; font-size:13px; margin-top:4px">${tooltipInfo}</div>` : ''}`
+        ? `<div style="font-weight:600">${name}</div>${tooltipInfo ? `<div style="color:#666; font-size:13px; margin-top:4px;>${tooltipInfo}</div>` : ''}`
         : `<div style="font-weight:600">${name}</div><div style="color:#999">No data available</div>`;
 
     (layer as L.Layer & { bindTooltip: (content: string, options?: { sticky?: boolean }) => void }).bindTooltip(tooltipContent, { sticky: true });
