@@ -1,42 +1,36 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { Search, X } from "lucide-react";
 
-// Hooks & composants existants
-import CountryModal from "@/components/CountryModal";
+// Hooks
 import { useAllCountries } from "@/hooks/useAllCountriesData";
 import { useWordPressAlerts } from "@/hooks/useWordPressAlerts";
-import AlertCarousel from "@/components/AlertCarousel";
 
-const MapView = dynamic(
-    () => import("@/components/MapView"),
-    {
-        ssr: false, // Désactive le rendu côté serveur
-        loading: () => (
-            <div className="w-full h-full bg-gray-100 animate-pulse flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Map loading...</p>
-                </div>
-            </div>
-        ),
-    }
-);
+// ✅ Désactiver SSR pour TOUS les composants qui utilisent window/document
+const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
+const CountryModal = dynamic(() => import("@/components/CountryModal"), { ssr: false });
+const AlertCarousel = dynamic(() => import("@/components/AlertCarousel"), { ssr: false });
 
 export default function Page() {
     const [selectedCountryIso3, setSelectedCountryIso3] = useState<string>("");
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [sidebarOpen, setSidebarOpen] = useState(true); // dÃ©pliÃ©e par dÃ©faut quand pas de modal
+    const [sidebarOpen, setSidebarOpen] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [isMounted, setIsMounted] = useState(false);
 
-    // DonnÃ©es pays (hook partagÃ©)
+    // S'assurer que le composant est monté côté client
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    // Données pays
     const { countries, loading, error } = useAllCountries();
 
     // Données WordPress alertes
-    const { alerts, loading: alertsLoading } = useWordPressAlerts();
+    const { alerts } = useWordPressAlerts();
 
     // Enrichir les alertes avec les noms de pays
     const alertsWithCountryNames = useMemo(() => {
@@ -55,13 +49,13 @@ export default function Page() {
         setSidebarOpen(false);
     };
 
-    // Ferme le modal + redÃ©plie la sidebar
+    // Ferme le modal + redéplie la sidebar
     const handleModalClose = () => {
         setIsModalOpen(false);
         setSidebarOpen(true);
     };
 
-    // Couleurs/scores démos (inchangé)
+    // Scores démos
     const scoresByIso3 = useMemo(() => {
         return countries.reduce((acc, country) => {
             const hash = country.iso_a3.split("").reduce((a, b) => {
@@ -74,7 +68,7 @@ export default function Page() {
         }, {} as Record<string, number>);
     }, [countries]);
 
-    // Construire un mapping des descriptions de tooltip
+    // Tooltip info
     const tooltipInfoByIso3 = useMemo(() => {
         return countries.reduce((acc, country) => {
             if (country.tooltip_info) {
@@ -97,7 +91,7 @@ export default function Page() {
 
     const countriesByRegion = useMemo(() => {
         return filteredCountries.reduce((acc, c) => {
-            const region = c.region || "Non spÃ©cifiÃ©e";
+            const region = c.region || "Non spécifiée";
             (acc[region] ||= []).push(c);
             return acc;
         }, {} as Record<string, typeof countries>);
@@ -111,19 +105,29 @@ export default function Page() {
         return colors[Math.abs(hash) % colors.length];
     };
 
+    // Ne rien rendre tant que pas monté côté client
+    if (!isMounted) {
+        return (
+            <div className="fixed inset-0 bg-white flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="fixed inset-0 bg-white">
-            {/* LOGO en haut-gauche (flottant) */}
+            {/* LOGO en haut-gauche */}
             <div className="pointer-events-none fixed top-6 left-6 z-[1400] flex items-center">
                 <div className="pointer-events-auto px-4 py-3">
-                    <Image src="/logo.png" width={160} height={44} alt="Logo" />
+                    <Image src="/logo.png" width={160} height={44} alt="Logo" priority />
                 </div>
-
                 <h2 className="text-xl font-bold">West Africa Mediascape</h2>
-
             </div>
 
-            {/* CARTE plein Ã©cran (elle passe entiÃ¨rement sous les overlays) */}
+            {/* CARTE plein écran */}
             <div className="absolute inset-0">
                 {loading ? (
                     <div className="w-full h-full bg-gray-100 animate-pulse flex items-center justify-center">
@@ -149,7 +153,7 @@ export default function Page() {
                 )}
             </div>
 
-            {/* SIDEBAR flottante (dÃ©pliÃ©e â†”ï¸Ž repliÃ©e) */}
+            {/* SIDEBAR flottante */}
             <aside
                 className={[
                     "fixed right-6 top-6 transition-all duration-300",
@@ -157,10 +161,8 @@ export default function Page() {
                     sidebarOpen && !isModalOpen ? "w-80" : "w-[420px]",
                 ].join(" ")}
             >
-                {/* ETAT DÃ‰PLIÃ‰ â€” modal fermÃ© */}
                 {sidebarOpen && !isModalOpen ? (
                     <div className="overflow-hidden shadow-xl bg-white/70">
-                        {/* En-tÃªte / champ de recherche (style bleu via classes existantes si voulu) */}
                         <div className="pt-6 pr-6 pb-2 pl-6">
                             <div className="relative border border-gray-300 rounded-xl">
                                 <Search
@@ -178,7 +180,7 @@ export default function Page() {
                                     <button
                                         type="button"
                                         style={{ background: "none" }}
-                                        onMouseDown={(e) => e.preventDefault()} // Ã©vite la perte de focus avant le click
+                                        onMouseDown={(e) => e.preventDefault()}
                                         onClick={() => setSearchTerm("")}
                                         className="absolute right-2 top-1/2 -translate-y-1/2 z-20 hover:text-white"
                                         aria-label="Clear"
@@ -189,7 +191,6 @@ export default function Page() {
                             </div>
                         </div>
 
-                        {/* Liste par rÃ©gions */}
                         <div className="max-h-[50vh] overflow-y-auto">
                             {Object.entries(countriesByRegion).map(([region, list]) => (
                                 <div key={region} className="border-b border-gray-100">
@@ -199,26 +200,20 @@ export default function Page() {
                                                 key={country.id}
                                                 onClick={() => handleCountryClick(country.iso_a3)}
                                                 className={`w-full text-left p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors ${
-                                                    selectedCountryIso3 === country.iso_a3
-                                                        ? "bg-orange-50"
-                                                        : ""
+                                                    selectedCountryIso3 === country.iso_a3 ? "bg-orange-50" : ""
                                                 }`}
                                             >
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-3">
-                            <span
-                                className="w-4 h-4 rounded-full border border-gray-300"
-                                style={{
-                                    backgroundColor:"#ebebeb"
-                                }}
-                            />
+                                    <span
+                                        className="w-4 h-4 rounded-full border border-gray-300"
+                                        style={{ backgroundColor:"#ebebeb" }}
+                                    />
                                                         <span className="font-medium text-gray-800">
-                              {country.name_fr}
-                            </span>
+                                      {country.name_fr}
+                                    </span>
                                                     </div>
-                                                    <span className="text-sm text-gray-600">
-                            {country.iso_a3}
-                          </span>
+                                                    <span className="text-sm text-gray-600">{country.iso_a3}</span>
                                                 </div>
                                             </button>
                                         ))}
@@ -226,21 +221,15 @@ export default function Page() {
                                 </div>
                             ))}
                             {filteredCountries.length === 0 && (
-                                <div className="p-6 text-center text-gray-500">
-                                    No countries found
-                                </div>
+                                <div className="p-6 text-center text-gray-500">No countries found</div>
                             )}
                         </div>
                     </div>
                 ) : (
-                    // ETAT REPLIÃ‰ â€” modal ouvert : barre de recherche seule + dropdown dÃ¨s 3 lettres
                     <div className="relative">
                         <div className="rounded-2xl shadow-xl border border-gray-200 bg-white p-3">
                             <div className="relative">
-                                <Search
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                                    size={18}
-                                />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                 <input
                                     type="text"
                                     placeholder="Search by country"
@@ -262,11 +251,10 @@ export default function Page() {
                             </div>
                         </div>
 
-                        {/* Dropdown rÃ©sultats (Ã  partir de 3 caractÃ¨res) */}
                         {searchTerm.trim().length >= 3 && (
                             <div className="absolute mt-2 w-[420px] max-h-[60vh] overflow-y-auto rounded-xl shadow-2xl border border-gray-200 bg-white transition-all duration-200">
                                 {filteredCountries.length === 0 ? (
-                                    <div className="p-4 text-sm text-gray-500">Aucun rÃ©sultat</div>
+                                    <div className="p-4 text-sm text-gray-500">Aucun résultat</div>
                                 ) : (
                                     filteredCountries.map((c) => (
                                         <button
@@ -274,15 +262,13 @@ export default function Page() {
                                             onClick={() => handleCountryClick(c.iso_a3)}
                                             className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center justify-between"
                                         >
-                      <span className="flex items-center gap-3">
-                        <span
-                            className="w-3.5 h-3.5 rounded-full border border-gray-300"
-                            style={{
-                                backgroundColor: getCountryColorByISO3(c.iso_a3),
-                            }}
-                        />
-                        <span className="text-gray-800">{c.name_fr}</span>
-                      </span>
+                                <span className="flex items-center gap-3">
+                                  <span
+                                      className="w-3.5 h-3.5 rounded-full border border-gray-300"
+                                      style={{ backgroundColor: getCountryColorByISO3(c.iso_a3) }}
+                                  />
+                                  <span className="text-gray-800">{c.name_fr}</span>
+                                </span>
                                             <span className="text-xs text-gray-500">{c.iso_a3}</span>
                                         </button>
                                     ))
@@ -292,13 +278,9 @@ export default function Page() {
                     </div>
                 )}
             </aside>
+
             {/* CAROUSEL D'ALERTES EN BAS */}
-
-            <AlertCarousel
-                alerts={alertsWithCountryNames}
-                isHidden={isModalOpen}
-            />
-
+            <AlertCarousel alerts={alertsWithCountryNames} isHidden={isModalOpen} />
 
             {/* MODAL bottom sheet */}
             <CountryModal
