@@ -110,7 +110,7 @@ a {
 
 /* Bouton toggle sidebar */
 button {
-  background: var(--neutral-white);
+  /*background: var(--neutral-white);*/
   border: 1px solid var(--neutral-medium);
   padding: 12px;
   cursor: pointer;
@@ -996,8 +996,8 @@ button:disabled {
 .alert-carousel-card {
   flex-shrink: 0;
   width: 340px;
-  background: white;
-  border: 1px solid #E0E0E0;
+  background-color: rgb(255 255 255 / 0.7);
+  /*border: 1px solid #E0E0E0;*/
   border-radius: 12px;
   padding: 0;
   transition: all 0.3s ease;

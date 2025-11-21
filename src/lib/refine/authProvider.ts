@@ -2,13 +2,11 @@
 
 import type { AuthProvider } from "@refinedev/core";
 import { supabase } from "@/lib/supabase";
-
 interface LoginParams {
   email?: string;
   password?: string;
   redirectTo?: string;
 }
-
 export const authProvider: AuthProvider = {
   // Login par email+password
   login: async (params: LoginParams) => {

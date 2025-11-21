@@ -4,6 +4,7 @@
 import { useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight, ExternalLink, Clock } from 'lucide-react';
 import type { WordPressAlert } from '@/hooks/useWordPressAlerts';
+import { colorForCountry } from '@/components/MapView';
 
 interface AlertCarouselProps {
   alerts: WordPressAlert[];
@@ -90,12 +91,16 @@ export default function AlertCarousel({ alerts, isHidden = false }: AlertCarouse
               className="alert-carousel-card"
             >
               {/* Time badge */}
-              {alert.countryName && ( 
-                <div 
-                  className="alert-carousel-time"
-                  style={{ backgroundColor: getCategoryColor(alert.category) }}
-                >
-                  {alert.countryName}
+              {alert.countryName && (
+                  <div
+                      className="alert-carousel-time"
+                      style={{
+                        backgroundColor: alert.countryIso3
+                            ? colorForCountry(alert.countryIso3)
+                            : '#999999'
+                      }}
+                  >
+                    {alert.countryName || 'Unknown'}
                 </div>
               )}
 
@@ -104,10 +109,10 @@ export default function AlertCarousel({ alerts, isHidden = false }: AlertCarouse
                 <h3 className="alert-carousel-card-title">
                   {alert.title}
                 </h3>
-                
-                <p className="alert-carousel-excerpt">
-                  {alert.excerpt}
-                </p>
+
+                <p className="alert-carousel-excerpt"
+                    dangerouslySetInnerHTML={{ __html: alert.excerpt }}
+                ></p>
 
                 {/* Footer */}
                 <div className="alert-carousel-footer">

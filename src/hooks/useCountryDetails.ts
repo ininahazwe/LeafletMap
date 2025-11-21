@@ -1,7 +1,7 @@
 // hooks/useCountryDetails.ts
 import { useState, useEffect, useCallback  } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { CountryWithMedia } from '../app/types/database';
+import type { CountryWithMedia } from '@/app/types/database';
 
 interface UseCountryDetailsReturn {
   countryData: CountryWithMedia | null;
