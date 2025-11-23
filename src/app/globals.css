@@ -435,8 +435,10 @@ button:disabled {
   border: 1px solid var(--neutral-medium) !important;
   font-weight: 500;
   font-size: 13px;
-  max-width: 360px !important;  /* Élargir le conteneur */
-  width: max-content !important; /* Adapter à la largeur du contenu */
+  white-space: normal !important; /* 1. Autorise le texte à passer à la ligne */
+  width: max-content !important;  /* 2. Force la boîte à s'élargir autant que possible */
+  max-width: 300px !important;    /* 3. ...mais l'arrête net à 300px */
+  line-height: 1.5 !important;
   padding: 8px 12px !important;  /* Plus d'espace intérieur */
   border-radius: 6px !important;
 }

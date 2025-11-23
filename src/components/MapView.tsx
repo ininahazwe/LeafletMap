@@ -208,8 +208,20 @@ function CountryInteractions({
 
     // Tooltip adaptatif
     const tooltipInfo = tooltipInfoByIso3?.[iso3];
+
+    // Dans MapView.tsx, à l'intérieur de onEachFeature
+
     const tooltipContent = score != null
-        ? `<div style="font-weight:600">${name}</div>${tooltipInfo ? `<div style="color:#666; font-size:13px; margin-top:4px;>${tooltipInfo}</div>` : ''}`
+        ? `<div style="font-weight:600; margin-bottom: 4px;">${name}</div>${
+            tooltipInfo
+                ? `<div style="color:#666; font-size:13px; line-height:1.4; white-space:normal; max-width:280px;">
+             ${tooltipInfo}
+             <div style="color:#4E79A7; font-size:11px; font-weight:600; margin-top:8px; letter-spacing: 0.02em;">
+               Learn more &rarr;
+             </div>
+           </div>`
+                : ''
+        }`
         : `<div style="font-weight:600">${name}</div><div style="color:#999">No data available</div>`;
 
     (layer as L.Layer & { bindTooltip: (content: string, options?: { sticky?: boolean }) => void }).bindTooltip(tooltipContent, { sticky: true });
