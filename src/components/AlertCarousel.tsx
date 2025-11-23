@@ -85,25 +85,26 @@ export default function AlertCarousel({ alerts, isHidden = false }: AlertCarouse
           className="alert-carousel-scroll"
           onScroll={handleScroll}
         >
-          {alerts.map((alert) => (
-            <article
-              key={alert.id}
-              className="alert-carousel-card"
-            >
-              {/* Time badge */}
-              {alert.countryName && (
-                  <div
-                      className="alert-carousel-time"
-                      style={{
-                        backgroundColor: alert.countryIso3
-                            ? colorForCountry(alert.countryIso3)
-                            : '#999999'
-                      }}
-                  >
-                    {alert.countryName || 'Unknown'}
-                </div>
-              )}
-
+          {alerts.map((alert, i) => (
+              <article
+                  key={alert.id}
+                  className="alert-carousel-card sequential-appear"
+                  style={{
+                    animationDelay: `${i * 0.15}s`
+                  }}
+              >
+                {alert.countryName && (
+                    <div
+                        className="alert-carousel-time"
+                        style={{
+                          backgroundColor: alert.countryIso3
+                              ? colorForCountry(alert.countryIso3)
+                              : '#999999'
+                        }}
+                    >
+                      {alert.countryName || 'Unknown'}
+                    </div>
+                )}
               {/* Card content */}
               <div className="alert-carousel-content">
                 <h3 className="alert-carousel-card-title">
@@ -117,7 +118,7 @@ export default function AlertCarousel({ alerts, isHidden = false }: AlertCarouse
                 {/* Footer */}
                 <div className="alert-carousel-footer">
                   {/* Afficher le nom du pays dynamiquement au lieu du code ISO */}
-                  
+
                   {alert.date && (
                     <span className="alert-carousel-country">
                       {new Date(alert.date).toLocaleDateString('en-EN')}

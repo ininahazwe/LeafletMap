@@ -1156,3 +1156,25 @@ button:disabled {
 aside.fixed.right-6 {
   bottom: 260px !important;
 }
+
+/* Définition de l'animation : apparition en fondu + léger glissement vers le haut */
+@keyframes sequenceAppear {
+  from {
+    opacity: 0;
+    transform: translateY(30px); /* Commence un peu plus bas */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0); /* Arrive à sa position finale */
+  }
+}
+
+/* Classe à appliquer aux cartes */
+.alert-carousel-card.sequential-appear {
+  /* ÉTAT INITIAL : Invisible. Très important ! */
+  opacity: 0;
+  animation: sequenceAppear 0.6s ease-out forwards;
+
+  /* Optimisation pour éviter les saccades */
+  will-change: transform, opacity;
+}

@@ -302,10 +302,10 @@ export default function MapView({ scoresByIso3, onCountryClick, zoomToCountry, t
   return (
       <div className="relative w-full h-screen rounded-xl border overflow-hidden">
         <MapContainer
-            center={[0, 20]}  // CentrÃ© sur l'Afrique : latitude 0Â°, longitude 20Â°E
-            zoom={3}          // Zoom plus proche pour voir l'Afrique entiÃ¨re
-            minZoom={2}       // Zoom minimum adaptÃ© pour Ã©viter de trop dÃ©zoomer
-            maxZoom={5}       // Limite le zoom maximum si besoin
+            center={[12, -4]}  // Latitude 12°N, Longitude 4°W (Point central Afrique de l'Ouest)
+            zoom={4}          // Zoom plus proche pour voir l'Afrique entiÃ¨re
+            minZoom={3}       // Zoom minimum adaptÃ© pour Ã©viter de trop dÃ©zoomer
+            maxZoom={6}       // Limite le zoom maximum si besoin
             style={{ height: "100%", width: "100%" }}
             worldCopyJump
             // IMPORTANT: DÃ©finir une couleur de fond pour la carte
