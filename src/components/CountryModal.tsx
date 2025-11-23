@@ -242,7 +242,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                         </div>
                         <h3 className="text-xl font-semibold">Media Regulators</h3>
                       </div>
-                      <p className="text-gray-700 leading-relaxed">{parse(mediaData.media_regulators)}</p>
+                      <div className="text-gray-700 leading-relaxed">{parse(mediaData.media_regulators)}</div>
                     </div>
                   )}
 
@@ -254,7 +254,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                         </div>
                         <h3 className="text-xl font-semibold">Journalists Associations</h3>
                       </div>
-                      <p className="text-gray-700 leading-relaxed">{parse(mediaData.journalists_associations)}</p>
+                      <div className="text-gray-700 leading-relaxed">{parse(mediaData.journalists_associations)}</div>
                     </div>
                   )}
 
@@ -266,7 +266,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                         </div>
                         <h3 className="text-xl font-semibold">International media</h3>
                       </div>
-                      <p className="text-gray-700 leading-relaxed">{parse(mediaData.international_media)}</p>
+                      <div className="text-gray-700 leading-relaxed">{parse(mediaData.international_media)}</div>
                     </div>
                   )}
 
@@ -278,7 +278,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                         </div>
                         <h3 className="text-xl font-semibold">State of internet freedom</h3>
                       </div>
-                      <p className="text-gray-700 leading-relaxed">{parse(mediaData.internet_freedom)}</p>
+                      <div className="text-gray-700 leading-relaxed">{parse(mediaData.internet_freedom)}</div>
                     </div>
                   )}
                 </div>
@@ -291,7 +291,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                         <Radio className="w-5 h-5 text-orange-500" />
                         <h4 className="font-semibold">Radio Stations</h4>
                       </div>
-                      <p className="text-sm text-gray-600">{parse(mediaData.radio_stations)}</p>
+                      <div className="text-sm text-gray-600">{parse(mediaData.radio_stations)}</div>
                     </div>
                   )}
 
@@ -301,7 +301,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                         <Tv className="w-5 h-5 text-blue-500" />
                         <h4 className="font-semibold">TV Stations</h4>
                       </div>
-                      <p className="text-sm text-gray-600">{parse(mediaData.tv_stations)}</p>
+                      <div className="text-sm text-gray-600">{parse(mediaData.tv_stations)}</div>
                     </div>
                   )}
 
@@ -311,7 +311,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                         <ListCheck className="w-5 h-5 text-blue-500" />
                         <h4 className="font-semibold">State-owned media</h4>
                       </div>
-                      <p className="text-sm text-gray-600">{parse(mediaData.state_owned_media)}</p>
+                      <div className="text-sm text-gray-600">{parse(mediaData.state_owned_media)}</div>
                     </div>
                   )}
 
@@ -321,7 +321,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                         <HomeIcon className="w-5 h-5 text-blue-500" />
                         <h4 className="font-semibold">News agency</h4>
                       </div>
-                      <p className="text-sm text-gray-600">{parse(mediaData.news_agency)}</p>
+                      <div className="text-sm text-gray-600">{parse(mediaData.news_agency)}</div>
                     </div>
                   )}
 
@@ -331,7 +331,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                         <Newspaper className="w-5 h-5 text-green-500" />
                         <h4 className="font-semibold">Newspapers</h4>
                       </div>
-                      <p className="text-sm text-gray-600">{parse(mediaData.newspapers)}</p>
+                      <div className="text-sm text-gray-600">{parse(mediaData.newspapers)}</div>
                     </div>
                   )}
 
@@ -341,7 +341,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                         <Globe className="w-5 h-5 text-purple-500" />
                         <h4 className="font-semibold">Online Media</h4>
                       </div>
-                      <p className="text-sm text-gray-600">{parse(mediaData.online_media)}</p>
+                      <div className="text-sm text-gray-600">{parse(mediaData.online_media)}</div>
                     </div>
                   )}
 
@@ -351,7 +351,7 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
                         <ExternalLink className="w-5 h-5 text-indigo-500" />
                         <h4 className="font-semibold">Leading Media</h4>
                       </div>
-                      <p className="text-sm text-gray-600">{parse(mediaData.leading_media)}</p>
+                      <div className="text-sm text-gray-600">{parse(mediaData.leading_media)}</div>
                     </div>
                   )}
                 </aside>
