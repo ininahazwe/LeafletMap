@@ -156,6 +156,7 @@ export default function Page() {
             {/* SIDEBAR flottante */}
             <aside
                 className={[
+                    "aside-initial-load",
                     "fixed right-6 top-6 transition-all duration-300",
                     isModalOpen ? "z-[2000]" : "z-[1500]",
                     sidebarOpen && !isModalOpen ? "w-80" : "w-[420px]",
