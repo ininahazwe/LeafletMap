@@ -158,6 +158,11 @@ button:disabled {
 }
 
 /* Sidebar - État étendu */
+.sidebar-custom{
+  border-radius: 12px;
+  background: #E9EEEA;
+}
+
 .sidebar-full {
   background: var(--honshu-blue-medium);
   color: var(--neutral-white);
@@ -574,6 +579,37 @@ button:disabled {
    ============================================ */
 
 /* Alert Ticker - Bandeau horizontal défilant */
+
+.introduction{
+  max-width: 420px;
+  background: #ffddd2;
+  padding: 10px 15px 10px 30px;
+  border-radius: 16px;
+}
+
+.big{
+  font-size: 20px;
+  line-height: 22px;
+}
+
+.small{
+  font-size: 14px;
+  line-height: 16px;
+  color: gray;
+}
+
+.close-button{
+  position: absolute;
+  left: -20px;
+  overflow: visible;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  border-radius: 50%;
+  background: #e8f4f8 !important;
+  color: gray;
+}
+
 .alert-ticker-container {
   position: fixed;
   top: 90px;
@@ -989,6 +1025,7 @@ button:disabled {
   scrollbar-width: none;
   -ms-overflow-style: none;
   padding: 4px 8px;
+  scroll-snap-type: x mandatory;
 }
 
 .alert-carousel-scroll::-webkit-scrollbar {
@@ -1002,21 +1039,21 @@ button:disabled {
   /*border: 1px solid #E0E0E0;*/
   border-radius: 12px;
   padding: 0;
-  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  scroll-behavior: smooth;
+  transition: transform 0.5s ease, box-shadow 0.5s ease;
 }
 
 .alert-carousel-card:hover {
-  border-color: var(--honshu-blue-light);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
   transform: translateY(-2px);
 }
 
 .alert-carousel-time {
   display: inline-block;
   padding: 8px 16px;
-  color: white;
+  color: #000000;
   font-weight: 700;
   font-size: 14px;
   border-radius: 8px 0 12px 0;
@@ -1200,4 +1237,79 @@ aside.fixed.right-6 {
   /* Applique l'animation au chargement */
   animation: asideAppear 0.5s ease-out forwards;
   will-change: transform, opacity;
+}
+
+/* Mobile menu transitions */
+@media (max-width: 768px) {
+  .aside-initial-load {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+}
+
+/* bandeau explicatif */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shrink {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-shrink {
+  animation: shrink 10s linear forwards;
+}
+
+@keyframes shrink {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+.animate-shrink {
+  animation: shrink 10s linear forwards;
+}
+
+/* globals.css */
+
+/* ... (conserver le contenu existant) ... */
+
+/* ============================================
+   ALERT SYSTEM STYLES
+   ============================================ */
+
+/* NOUVELLE RÈGLE pour les petits écrans desktop (par ex. 768px à 1024px) */
+@media (min-width: 768px) and (max-width: 1280px) {
+  .introduction {
+    max-width: 550px; /* Augmente la largeur sur les petits desktops */
+    padding: 15px 25px !important; /* Réduit le padding vertical pour moins de hauteur */
+    display: flex; /* Utilise flexbox pour aligner les éléments horizontalement */
+    align-items: center; /* Centre verticalement */
+    gap: 15px; /* Espace entre les éléments (icône, texte) */
+  }
+  
+  .introduction .text-sm {
+    margin-top: 0 !important; /* Supprime le margin-top du bloc de texte */
+    display: flex;
+    flex-direction: column;
+    gap: 4px; /* Espace entre les deux lignes de texte */
+  }
+
+  .introduction .pr-6 {
+      padding-right: 0 !important; /* Supprime le padding-right */
+  }
+
+  .introduction .big {
+    font-size: 16px; /* Taille de police légèrement réduite */
+    line-height: 1.4;
+  }
+  
+  .introduction .small {
+    font-size: 13px;
+    margin-top: 0 !important;
+  }
 }

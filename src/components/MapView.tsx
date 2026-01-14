@@ -47,37 +47,27 @@ export function colorForCountry(iso3?: string): string {
   if (!iso3) return "#e5e7eb"; // Gris pour pays sans donnÃ©es
 
   // Palette Ã©tendue de couleurs distinctes et harmonieuses
+  const baseColors = {
+    // --eggshell: #f4f1deff;
+    eggshell: ["#F9F7EFFF", "#F7F4E5FF", "#F4F1DEFF", "#DCD9C7FF", "#C5C2B0FF"],
+    // --burnt-peach: #e07a5fff;
+    burntPeach: ["#EFA38CFF", "#E78C73FF", "#E07A5FFF", "#C96D56FF", "#B2604DFF"],
+    // --twilight-indigo: #3d405bff;
+    twilightIndigo: ["#76788FFF", "#575973FF", "#3D405BFF", "#363951FF", "#2F3247FF"],
+    // --muted-teal: #81b29aff;
+    mutedTeal: ["#A7CBB7FF", "#94BFAF", "#81B29AFF", "#74A08BFF", "#678E7CFF"],
+    // --apricot-cream: #f2cc8fff;
+    apricotCream: ["#F9E0B7FF", "#F5D49FFF", "#F2CC8FFF", "#DCC985FF", "#C6A67BFF"],
+  };
+
+  // Création d'une liste unique et étendue de couleurs
   const colors = [
-    // Bleus principaux (tons de mer et ciel)
-    "#7B9FE0", "#6B8DD6", "#5A7BC7", "#4969B8", "#3857A9",
-
-    // Rouges/Corails (architecture et Ã©lÃ©ments dÃ©coratifs)
-    "#E85A4F", "#D63447", "#C42E3F", "#B22837", "#A0222F",
-
-    // Bleus clairs (nuances douces)
-    "#9BB5E8", "#B3C7F0", "#CBD9F8", "#E3EBFF", "#F1F5FF",
-
-    // Rouges/Roses clairs
-    "#F07167", "#F48C82", "#F8A79D", "#FBC2B8", "#FEDDD3",
-
-    // Bleus moyens
-    "#4E79A7", "#6289B7", "#7699C7", "#8AA9D7", "#9EB9E7",
-
-    // Corails et saumons
-    "#E76F51", "#EA7F69", "#ED8F81", "#F09F99", "#F3AFB1",
-
-    // Bleus profonds
-    "#2E4057", "#3D5068", "#4C6079", "#5B708A", "#6A809B",
-
-    // Rouges terreux
-    "#C44536", "#D05547", "#DC6558", "#E87569", "#F4857A",
-
-    // Bleus pastel
-    "#A8C8EC", "#BCD4F0", "#D0E0F4", "#E4ECF8", "#F8FAFC",
-
-    // Tons chauds complÃ©mentaires
-    "#FF8A80", "#FF9E95", "#FFB2AA", "#FFC6BF", "#FFDAD4"
-  ];
+    ...baseColors.eggshell,
+    ...baseColors.burntPeach,
+    ...baseColors.twilightIndigo,
+    ...baseColors.mutedTeal,
+    ...baseColors.apricotCream,
+  ]; // Total: 25 couleurs
 
   // GÃ©nÃ©rer un hash stable basÃ© sur l'ISO3
   const hash = iso3.split('').reduce((acc, char) => {

@@ -3,13 +3,15 @@
 import { useMemo, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { Search, X } from "lucide-react";
+import Link from "next/link";
+import { Search, X, Menu } from "lucide-react";
+import alert from "../../public/alert.svg";
 
 // Hooks
 import { useAllCountries } from "@/hooks/useAllCountriesData";
 import { useWordPressAlerts } from "@/hooks/useWordPressAlerts";
 
-// ✅ Désactiver SSR pour TOUS les composants qui utilisent window/document
+// Désactiver SSR pour TOUS les composants qui utilisent window/document
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 const CountryModal = dynamic(() => import("@/components/CountryModal"), { ssr: false });
 const AlertCarousel = dynamic(() => import("@/components/AlertCarousel"), { ssr: false });
@@ -20,10 +22,26 @@ export default function Page() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [isMounted, setIsMounted] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     // S'assurer que le composant est monté côté client
     useEffect(() => {
         setIsMounted(true);
+    }, []);
+
+    const [showIntro, setShowIntro] = useState(true);
+    const [introFading, setIntroFading] = useState(false);
+
+    // Fonction de fermeture avec fade
+    const closeIntro = () => {
+        setIntroFading(true);
+        setTimeout(() => setShowIntro(false), 300); // 300ms = durée du fade
+    };
+
+    // Auto-fermeture après 10s
+    useEffect(() => {
+        const timer = setTimeout(() => closeIntro(), 8000);
+        return () => clearTimeout(timer);
     }, []);
 
     // Données pays
@@ -47,6 +65,7 @@ export default function Page() {
         setSelectedCountryIso3(iso3);
         setIsModalOpen(true);
         setSidebarOpen(false);
+        setMobileMenuOpen(false);
     };
 
     // Ferme le modal + redéplie la sidebar
@@ -122,10 +141,50 @@ export default function Page() {
             {/* LOGO en haut-gauche */}
             <div className="pointer-events-none fixed top-6 left-6 z-[1400] flex items-center">
                 <div className="pointer-events-auto px-4 py-3">
-                    <Image src="/logo.png" width={160} height={44} alt="Logo" priority />
+                    <Link href="https://mfwa.org/" target="_blank" rel="noopener noreferrer">
+                        <Image src="/logo.png" width={160} height={44} alt="Logo" priority />
+                    </Link>
                 </div>
-                <h2 className="text-xl font-bold">West Africa Mediascape</h2>
+                <h2 className="text-xl font-bold hidden sm:block">West Africa Mediascape</h2>
             </div>
+
+            {/* BANDEAU INTRO - sous le logo */}
+            {showIntro && (
+                <div
+                    className={`fixed top-40 left-6 right-6 md:right-[360px] z-[1350] transition-all duration-300 ${
+                        introFading ? 'opacity-0 translate-y-[-10px]' : 'opacity-100 translate-y-0'
+                    }`}
+                >
+                    <div className="introduction sequential-appear" /* REMOVE: style={{padding: "25px 30px"}} */>
+                        <button
+                            onClick={closeIntro}
+                            className="close-button"
+                            style={{ background: "none" }}
+                        >
+                            <X size={18} />
+                        </button>
+                        <Image
+                            src={alert}
+                            alt="alert icon"
+                            width={30}
+                        />
+                        <div className="text-sm text-gray-700 pr-6 leading-relaxed mt-6">
+                            <p className="big">West Africa Mediascape is a dashboard featuring all 16 West African countries and their media environments.</p>
+                            <span className="block mt-4 small"> Hover over any country on the map, or select from the list on the right.</span>
+                        </div>
+                        {/* Barre de progression */}
+                    </div>
+                </div>
+            )}
+
+            {/* BOUTON HAMBURGER - Mobile uniquement */}
+            <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="fixed top-6 right-6 z-[1600] p-3 bg-white rounded-xl border border-gray-200 md:hidden"
+                aria-label="Menu"
+            >
+                {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
 
             {/* CARTE plein écran */}
             <div className="absolute inset-0">
@@ -153,18 +212,29 @@ export default function Page() {
                 )}
             </div>
 
+            {/* OVERLAY mobile */}
+            {mobileMenuOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-[1450] md:hidden"
+                    onClick={() => setMobileMenuOpen(false)}
+                />
+            )}
+
             {/* SIDEBAR flottante */}
             <aside
                 className={[
                     "aside-initial-load",
-                    "fixed right-6 top-6 transition-all duration-300",
+                    "fixed top-6 transition-all duration-300",
+                    "inset-x-4 md:inset-x-auto md:right-6",
+                    mobileMenuOpen ? "translate-x-0 opacity-100 inset-x-4" : "translate-x-[calc(100%+2rem)] opacity-0 pointer-events-none md:translate-x-0 md:opacity-100 md:pointer-events-auto md:inset-x-auto md:right-6",
                     isModalOpen ? "z-[2000]" : "z-[1500]",
-                    sidebarOpen && !isModalOpen ? "w-80" : "w-[420px]",
+                    sidebarOpen && !isModalOpen ? "md:w-80" : "md:w-[420px]",
                 ].join(" ")}
             >
                 {sidebarOpen && !isModalOpen ? (
-                    <div className="overflow-hidden shadow-xl bg-white/70">
-                        <div className="pt-6 pr-6 pb-2 pl-6">
+                    <div className="overflow-hidden sidebar-custom">
+                        {/* Header mobile avec bouton fermer */}
+                        <div className="pt-4 md:pt-6 pr-6 pb-2 pl-6">
                             <div className="relative border border-gray-300 rounded-xl">
                                 <Search
                                     className="absolute left-3 top-1/2 -translate-y-1/2"
@@ -192,7 +262,7 @@ export default function Page() {
                             </div>
                         </div>
 
-                        <div className="max-h-[50vh] overflow-y-auto">
+                        <div className="max-h-[60vh] md:max-h-[calc(100vh-480px)] overflow-y-auto">
                             {Object.entries(countriesByRegion).map(([region, list]) => (
                                 <div key={region} className="border-b border-gray-100">
                                     <div>
@@ -206,13 +276,13 @@ export default function Page() {
                                             >
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-3">
-                                    <span
-                                        className="w-4 h-4 rounded-full border border-gray-300"
-                                        style={{ backgroundColor:"#ebebeb" }}
-                                    />
-                                                        <span className="font-medium text-gray-800">
-                                      {country.name_fr}
-                                    </span>
+                                                        <span
+                                                            className="w-4 h-4 rounded-full border border-gray-300"
+                                                            style={{ backgroundColor:"#ebebeb" }}
+                                                        />
+                                                        <span className="font-bold text-gray-800">
+                                                            {country.name_fr}
+                                                        </span>
                                                     </div>
                                                     <span className="text-sm text-gray-600">{country.iso_a3}</span>
                                                 </div>
@@ -227,7 +297,7 @@ export default function Page() {
                         </div>
                     </div>
                 ) : (
-                    <div className="relative">
+                    <div className="relative hidden">
                         <div className="rounded-2xl shadow-xl border border-gray-200 bg-white p-3">
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -263,13 +333,13 @@ export default function Page() {
                                             onClick={() => handleCountryClick(c.iso_a3)}
                                             className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center justify-between"
                                         >
-                                <span className="flex items-center gap-3">
-                                  <span
-                                      className="w-3.5 h-3.5 rounded-full border border-gray-300"
-                                      style={{ backgroundColor: getCountryColorByISO3(c.iso_a3) }}
-                                  />
-                                  <span className="text-gray-800">{c.name_fr}</span>
-                                </span>
+                                            <span className="flex items-center gap-3">
+                                                <span
+                                                    className="w-3.5 h-3.5 rounded-full border border-gray-300"
+                                                    style={{ backgroundColor: getCountryColorByISO3(c.iso_a3) }}
+                                                />
+                                                <span className="text-gray-800">{c.name_fr}</span>
+                                            </span>
                                             <span className="text-xs text-gray-500">{c.iso_a3}</span>
                                         </button>
                                     ))
@@ -280,8 +350,10 @@ export default function Page() {
                 )}
             </aside>
 
-            {/* CAROUSEL D'ALERTES EN BAS */}
-            <AlertCarousel alerts={alertsWithCountryNames} isHidden={isModalOpen} />
+            {/* CAROUSEL D'ALERTES EN BAS - caché sur mobile quand menu ouvert */}
+            <div className={mobileMenuOpen ? "hidden md:block" : ""}>
+                <AlertCarousel alerts={alertsWithCountryNames} isHidden={isModalOpen} />
+            </div>
 
             {/* MODAL bottom sheet */}
             <CountryModal
