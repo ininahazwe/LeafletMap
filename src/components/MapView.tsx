@@ -21,11 +21,11 @@ if (typeof window !== "undefined") {
 type Props = {
   scoresByIso3: Record<string, number | undefined>;
   onCountryClick?: (iso3: string) => void;
-  zoomToCountry?: string; // Nouveau prop pour dÃ©clencher le zoom
-  tooltipInfoByIso3?: Record<string, string>; // Info supplémentaire pour tooltip
+  zoomToCountry?: string;
+  tooltipInfoByIso3?: Record<string, string>;
 };
 
-/** Invalidate la taille aprÃ¨s montage/changements (corrige les rendus partiels) */
+/** Invalidate la taille après montage/changements (corrige les rendus partiels) */
 function UseAutosize({ deps = [] as unknown[] }) {
   const map = useMap();
   useEffect(() => {
@@ -42,45 +42,62 @@ function UseAutosize({ deps = [] as unknown[] }) {
   return null;
 }
 
-/** Palette de couleurs uniques par pays (sans notion de score) */
+/** Palette de couleurs uniques par pays (16 pays d'Afrique de l'Ouest) */
 export function colorForCountry(iso3?: string): string {
-  if (!iso3) return "#e5e7eb"; // Gris pour pays sans donnÃ©es
+  if (!iso3) return "#e5e7eb"; // Gris pour pays sans données
 
-  // Palette Ã©tendue de couleurs distinctes et harmonieuses
-  const baseColors = {
-    // --eggshell: #f4f1deff;
-    eggshell: ["#F9F7EFFF", "#F7F4E5FF", "#F4F1DEFF", "#DCD9C7FF", "#C5C2B0FF"],
-    // --burnt-peach: #e07a5fff;
-    burntPeach: ["#EFA38CFF", "#E78C73FF", "#E07A5FFF", "#C96D56FF", "#B2604DFF"],
-    // --twilight-indigo: #3d405bff;
-    twilightIndigo: ["#76788FFF", "#575973FF", "#3D405BFF", "#363951FF", "#2F3247FF"],
-    // --muted-teal: #81b29aff;
-    mutedTeal: ["#A7CBB7FF", "#94BFAF", "#81B29AFF", "#74A08BFF", "#678E7CFF"],
-    // --apricot-cream: #f2cc8fff;
-    apricotCream: ["#F9E0B7FF", "#F5D49FFF", "#F2CC8FFF", "#DCC985FF", "#C6A67BFF"],
+  // Palettes de couleurs avec déclinaisons
+  const palettes = {
+    // Eggshell (beige/crème) - 5 tons
+    eggshell: ["#f4f1de", "#f9f7f0", "#ede8dd", "#dcd9c7", "#c5c2b0"],
+
+    // Burnt Peach (corail/pêche) - 5 tons
+    burntPeach: ["#e07a5f", "#efa38c", "#e78c73", "#c96d56", "#b2604d"],
+
+    // Twilight Indigo (bleu foncé) - 5 tons
+    twilightIndigo: ["#3d405b", "#575973", "#76788f", "#363951", "#2f3247"],
+
+    // Muted Teal (turquoise discret) - 5 tons
+    mutedTeal: ["#81b29a", "#a7cbb7", "#94bfaf", "#74a08b", "#678e7c"],
+
+    // Apricot Cream (abricot/jaune) - 5 tons
+    apricotCream: ["#f2cc8f", "#f9e0b7", "#f5d49f", "#dcc985", "#c6a67b"],
   };
 
-  // Création d'une liste unique et étendue de couleurs
-  const colors = [
-    ...baseColors.eggshell,
-    ...baseColors.burntPeach,
-    ...baseColors.twilightIndigo,
-    ...baseColors.mutedTeal,
-    ...baseColors.apricotCream,
-  ]; // Total: 25 couleurs
+  // Mapping explicite : chaque pays = couleur unique
+  // Distribution : 3-4 pays par couleur de palette
+  const countryColorMap: Record<string, string> = {
+    // Eggshell (beige) - 3 pays
+    BEN: palettes.eggshell[0], // #f4f1de
+    BFA: palettes.eggshell[1], // #f9f7f0
+    CPV: palettes.eggshell[2], // #ede8dd
 
-  // GÃ©nÃ©rer un hash stable basÃ© sur l'ISO3
-  const hash = iso3.split('').reduce((acc, char) => {
-    acc = ((acc << 5) - acc) + char.charCodeAt(0);
-    return acc & acc; // Convertir en entier 32-bit
-  }, 0);
+    // Burnt Peach (corail) - 4 pays
+    CIV: palettes.burntPeach[0], // #e07a5f
+    GMB: palettes.burntPeach[1], // #efa38c
+    GHA: palettes.burntPeach[2], // #e78c73
+    GIN: palettes.burntPeach[3], // #c96d56
 
-  // SÃ©lectionner une couleur basÃ©e sur le hash
-  const colorIndex = Math.abs(hash) % colors.length;
-  return colors[colorIndex];
+    // Twilight Indigo (bleu foncé) - 4 pays
+    GNB: palettes.twilightIndigo[0], // #3d405b
+    LBR: palettes.twilightIndigo[1], // #575973
+    MLI: palettes.twilightIndigo[2], // #76788f
+    MRT: palettes.twilightIndigo[3], // #363951
+
+    // Muted Teal (turquoise) - 3 pays
+    NER: palettes.mutedTeal[0], // #81b29a
+    NGA: palettes.mutedTeal[1], // #a7cbb7
+    SEN: palettes.mutedTeal[2], // #94bfaf
+
+    // Apricot Cream (abricot) - 2 pays
+    SLE: palettes.apricotCream[0], // #f2cc8f
+    TGO: palettes.apricotCream[1], // #f9e0b7
+  };
+
+  return countryColorMap[iso3.toUpperCase()] || "#e5e7eb";
 }
 
-/** Plusieurs variantes de clÃ©s ISO dans les GeoJSON du monde */
+/** Plusieurs variantes de clés ISO dans les GeoJSON du monde */
 const ISO_KEYS = [
   "iso_a3",
   "ISO_A3",
@@ -99,7 +116,7 @@ function getISO3(props: Record<string, unknown>): string {
   return "";
 }
 
-/** Composant qui gÃ¨re le zoom automatique sur un pays */
+/** Composant qui gère le zoom automatique sur un pays */
 function AutoZoomToCountry({
                              zoomToCountry,
                              worldRef
@@ -130,18 +147,18 @@ function AutoZoomToCountry({
     const modalHeight = modalElement ? modalElement.clientHeight : 280;
     const bottomPadding = modalHeight + 50;
 
-    // Zoomer sur le pays trouvÃ©
+    // Zoomer sur le pays trouvé
     if (targetLayer) {
       const bounds = (targetLayer as L.Layer & { getBounds?: () => L.LatLngBounds }).getBounds?.();
       if (bounds && bounds.isValid()) {
         setTimeout(() => {
           map.fitBounds(bounds, {
-            paddingTopLeft: [50, 50],              // Normal en haut
-            paddingBottomRight: [50, bottomPadding], // Plus en bas pour le modal
+            paddingTopLeft: [50, 50],
+            paddingBottomRight: [50, bottomPadding],
             duration: 1.5,
             easeLinearity: 0.1
           });
-        }, 300); // DÃ©lai pour permettre l'ouverture du modal
+        }, 300);
       }
     }
   }, [zoomToCountry, worldRef, map]);
@@ -149,21 +166,15 @@ function AutoZoomToCountry({
   return null;
 }
 
-/** Hook pour gÃ©rer la map dans onEachFeature */
-function useMapReference() {
-  const map = useMap();
-  return map;
-}
-
 type CountryInteractionsProps = {
   worldData: FeatureCollection<Geometry>;
   scoresByIso3: Record<string, number | undefined>;
   worldRef: React.RefObject<L.GeoJSON | null>;
   onCountryClick?: (iso3: string) => void;
-  tooltipInfoByIso3?: Record<string, string>; // Info supplémentaire pour tooltip
+  tooltipInfoByIso3?: Record<string, string>;
 };
 
-/** Composant qui gÃ¨re les interactions avec les pays */
+/** Composant qui gère les interactions avec les pays */
 function CountryInteractions({
                                worldData,
                                scoresByIso3,
@@ -171,8 +182,6 @@ function CountryInteractions({
                                onCountryClick,
                                tooltipInfoByIso3
                              }: CountryInteractionsProps) {
-  const map = useMapReference();
-
   const styleFn = (feat?: { properties?: Record<string, unknown> }): L.PathOptions => {
     if (!feat) return { color: "#ffffff", weight: 1, fillColor: "#d4d4d4", fillOpacity: 0.2 };
 
@@ -188,7 +197,6 @@ function CountryInteractions({
     };
   };
 
-
   const onEachFeature = (feature: { properties?: Record<string, unknown> } | undefined, layer: Layer) => {
     if (!feature) return;
     const props = feature?.properties ?? {};
@@ -196,7 +204,7 @@ function CountryInteractions({
     const score = scoresByIso3[iso3];
     const name = (props.NAME as string) || (props.ADMIN as string) || (props.name as string) || iso3;
 
-    // Tooltip construction (votre code existant pour le tooltip...)
+    // Tooltip construction
     const tooltipInfo = tooltipInfoByIso3?.[iso3];
     const tooltipContent = score != null
         ? `<div style="font-weight:600; margin-bottom: 4px;">${name}</div>${
@@ -224,22 +232,16 @@ function CountryInteractions({
     // Accessibilité (curseur main)
     if (el) {
       el.style.cursor = score != null ? 'pointer' : 'default';
-      // ... (reste de la logique d'accessibilité tabindex/role)
     }
 
-    // --- MODIFICATION ICI : On garde juste le style, on supprime le fitBounds ---
-
+    // Effet visuel au survol
     (layer as L.Path).on("mouseover", () => {
-      // On garde uniquement l'effet visuel (bordure plus épaisse)
       (layer as L.Path).setStyle({ weight: 2 });
     });
 
     (layer as L.Path).on("mouseout", () => {
-      // Retour au style normal
       (layer as L.Path).setStyle({ weight: 1 });
     });
-
-    // Plus besoin de listener sur "remove" car plus de timeout à nettoyer
   };
 
   return (
@@ -292,25 +294,15 @@ export default function MapView({ scoresByIso3, onCountryClick, zoomToCountry, t
   return (
       <div className="relative w-full h-screen rounded-xl border overflow-hidden">
         <MapContainer
-            center={[12, -4]}  // Latitude 12°N, Longitude 4°W (Point central Afrique de l'Ouest)
-            zoom={4}          // Zoom plus proche pour voir l'Afrique entiÃ¨re
-            minZoom={3}       // Zoom minimum adaptÃ© pour Ã©viter de trop dÃ©zoomer
-            maxZoom={6}       // Limite le zoom maximum si besoin
+            center={[12, -4]}
+            zoom={4}
+            minZoom={3}
+            maxZoom={6}
             style={{ height: "100%", width: "100%" }}
             worldCopyJump
-            // IMPORTANT: DÃ©finir une couleur de fond pour la carte
             className="map-background"
         >
-          {/* Corrige les tailles quand les layouts se stabilisent / quand les donnÃ©es arrivent */}
           <UseAutosize deps={[worldData]} />
-
-          {/*
-        SUPPRIMÃ‰ : TileLayer pour masquer la carte d'arriÃ¨re-plan
-        <TileLayer
-          attribution="&copy; OpenStreetMap contributors"
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        */}
 
           {worldData && (
               <>
@@ -325,23 +317,9 @@ export default function MapView({ scoresByIso3, onCountryClick, zoomToCountry, t
                     zoomToCountry={zoomToCountry}
                     worldRef={worldRef}
                 />
-                {/* FitBoundsOnData supprimÃ© pour garder le focus sur l'Afrique */}
               </>
           )}
         </MapContainer>
-
-        {/* LÃ©gende simple - commentÃ©e car plus de scores
-      <div className="absolute bottom-3 right-3 z-[1000] bg-white/90 backdrop-blur rounded-md shadow px-3 py-2 text-sm">
-        <div className="font-medium mb-1">Score global</div>
-        <ul className="space-y-1">
-          <li className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded" style={{background:'#1f77b4'}} /> â‰¥ 80</li>
-          <li className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded" style={{background:'#2ca02c'}} /> 65â€“79.9</li>
-          <li className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded" style={{background:'#ff7f0e'}} /> 50â€“64.9</li>
-          <li className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded" style={{background:'#d62728'}} /> 35â€“49.9</li>
-          <li className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded" style={{background:'#9467bd'}} /> &lt; 35</li>
-          <li className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded" style={{background:'#e5e7eb'}} /> n.d.</li>
-        </ul>
-      </div>*/}
       </div>
   );
 }

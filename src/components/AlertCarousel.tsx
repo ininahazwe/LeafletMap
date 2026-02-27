@@ -120,7 +120,15 @@ export default function AlertCarousel({ alerts, isHidden = false }: AlertCarouse
                   )}
 
                   <div className="alert-carousel-content">
-                    <h3 className="alert-carousel-card-title" dangerouslySetInnerHTML={{ __html: alert.title }} />
+                    <h3 className="alert-carousel-card-title">
+                      <a
+                        href={alert.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        dangerouslySetInnerHTML={{ __html: alert.title }}
+                        style={{ color: 'inherit', textDecoration: 'none' }} // Optionnel : pour garder le style du titre
+                      />
+                    </h3>
                     <p
                         className="alert-carousel-excerpt"
                         dangerouslySetInnerHTML={{ __html: alert.excerpt }}

@@ -1,6 +1,6 @@
 // components/CountryModal.tsx — Bottom sheet ancré bas avec dépliage au scroll/drag
 import React, { useEffect, useRef, useState } from "react";
-import {X, ExternalLink, Radio, Tv, Newspaper, Globe, Shield, Users, Building, Gavel, NewspaperIcon, ListCheck, WholeWord, HomeIcon} from "lucide-react";
+import {X, ExternalLink, Radio, Tv, Newspaper, Globe, Shield, Users, Building, Gavel, ListCheck, WholeWord, HomeIcon} from "lucide-react";
 import { useCountryDetails } from "@/hooks/useCountryDetails";
 import parse from 'html-react-parser';
 
@@ -16,14 +16,14 @@ const MAX_VH = 100;   // quasi plein écran (état final — cf. screenshot 2)
 const STEP_VH = 10;  // incrément via molette
 const DRAG_SENS = 0.35; // sensibilité du drag (px -> vh)
 
-const regionColors = {
+/*const regionColors = {
   Africa: "from-orange-500 to-red-600",
   Americas: "from-orange-400 to-red-500",
   Asia: "from-red-500 to-red-700",
   Europe: "from-yellow-400 to-orange-500",
   Oceania: "from-green-400 to-blue-500",
   default: "from-gray-500 to-gray-700",
-} as const;
+} as const;*/
 
 const iso3ToIso2 = (iso3: string): string => {
   const mapping: Record<string, string> = {
@@ -61,8 +61,8 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
   const dragStartY = useRef<number | null>(null);
   const dragStartVh = useRef<number>(MIN_VH);
 
-  const region = countryData?.region || "default";
-  const gradientClass = regionColors[region as keyof typeof regionColors] || regionColors.default;
+  //const region = countryData?.region || "default";
+  //const gradientClass = regionColors[region as keyof typeof regionColors] || regionColors.default;
   const mediaData = countryData?.media_environment;
 
   // Ouverture : repartir du format compact

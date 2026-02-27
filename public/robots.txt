@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api
+Disallow: /_next
+Disallow: /private
+
+# Performance: crawl delay (en secondes)
+Crawl-delay: 1
+
+# Règles spécifiques pour Googlebot
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+# Règles pour Bingbot
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
