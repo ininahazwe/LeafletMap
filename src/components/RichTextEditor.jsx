@@ -32,7 +32,7 @@ export default function RichTextEditor({ value, onChange }) {
           skin: "oxide", // ou 'oxide-dark' si tu veux un thème sombre
           content_css: "default", // ou 'dark' pour le thème sombre
           content_style:
-            "body { font-family:Helvetica,Arial,sans-serif; font-size:14px; padding:8px; }",
+            "body { fonts-family:Helvetica,Arial,sans-serif; fonts-size:14px; padding:8px; }",
         }}
     />
   );

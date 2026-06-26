@@ -8291,7 +8291,7 @@
     // We still need to know them so that we can do namespace
     // checks properly in case one wants to add them to
     // allow-list.
-    const svgDisallowed = freeze(['animate', 'color-profile', 'cursor', 'discard', 'font-face', 'font-face-format', 'font-face-name', 'font-face-src', 'font-face-uri', 'foreignobject', 'hatch', 'hatchpath', 'mesh', 'meshgradient', 'meshpatch', 'meshrow', 'missing-glyph', 'script', 'set', 'solidcolor', 'unknown', 'use']);
+    const svgDisallowed = freeze(['animate', 'color-profile', 'cursor', 'discard', 'fonts-face', 'fonts-face-format', 'fonts-face-name', 'fonts-face-src', 'fonts-face-uri', 'foreignobject', 'hatch', 'hatchpath', 'mesh', 'meshgradient', 'meshpatch', 'meshrow', 'missing-glyph', 'script', 'set', 'solidcolor', 'unknown', 'use']);
     const mathMl$1 = freeze(['math', 'menclose', 'merror', 'mfenced', 'mfrac', 'mglyph', 'mi', 'mlabeledtr', 'mmultiscripts', 'mn', 'mo', 'mover', 'mpadded', 'mphantom', 'mroot', 'mrow', 'ms', 'mspace', 'msqrt', 'mstyle', 'msub', 'msup', 'msubsup', 'mtable', 'mtd', 'mtext', 'mtr', 'munder', 'munderover', 'mprescripts']);
 
     // Similarly to SVG, we want to know all MathML elements,
@@ -23751,8 +23751,8 @@
           }
         });
       };
-      const memMinus = record(makeStepperButton(focusBack => decrease(false, focusBack), 'minus', 'Decrease font size', []));
-      const memPlus = record(makeStepperButton(focusBack => increase(false, focusBack), 'plus', 'Increase font size', []));
+      const memMinus = record(makeStepperButton(focusBack => decrease(false, focusBack), 'minus', 'Decrease fonts size', []));
+      const memPlus = record(makeStepperButton(focusBack => increase(false, focusBack), 'plus', 'Increase fonts size', []));
       const memInput = record({
         dom: {
           tag: 'div',

@@ -2935,7 +2935,7 @@
       }
       if (type !== 'html5-strict') {
         globalAttributes += ' xml:lang';
-        const html4PhrasingContent = 'acronym applet basefont big font strike tt';
+        const html4PhrasingContent = 'acronym applet basefont big fonts strike tt';
         phrasingContent = [
           phrasingContent,
           html4PhrasingContent
@@ -2993,7 +2993,7 @@
         }
       };
       if (type !== 'html5-strict') {
-        const html4PhrasingContent = 'acronym applet basefont big font strike tt';
+        const html4PhrasingContent = 'acronym applet basefont big fonts strike tt';
         each$e(split$1(html4PhrasingContent), name => {
           add(name, '', phrasingContent);
         });
@@ -3117,7 +3117,7 @@
         addAttrs('applet', 'codebase archive code object alt name width height align hspace vspace');
         addAttrs('img', 'name longdesc align border hspace vspace');
         addAttrs('iframe', 'longdesc frameborder marginwidth marginheight scrolling align');
-        addAttrs('font basefont', 'size color face');
+        addAttrs('fonts basefont', 'size color face');
         addAttrs('input', 'usemap align');
         addAttrs('select');
         addAttrs('textarea');
@@ -3359,7 +3359,7 @@
       const headings = 'h1 h2 h3 h4 h5 h6';
       const textBlockElementsMap = createLookupTable('text_block_elements', headings + ' p div address pre form ' + 'blockquote center dir fieldset header footer article section hgroup aside main nav figure');
       const blockElementsMap = createLookupTable('block_elements', 'hr table tbody thead tfoot ' + 'th tr td li ol ul caption dl dt dd noscript menu isindex option ' + 'datalist select optgroup figcaption details summary html body multicol listing', textBlockElementsMap);
-      const textInlineElementsMap = createLookupTable('text_inline_elements', 'span strong b em i font s strike u var cite ' + 'dfn code mark q sup sub samp');
+      const textInlineElementsMap = createLookupTable('text_inline_elements', 'span strong b em i fonts s strike u var cite ' + 'dfn code mark q sup sub samp');
       const transparentElementsMap = createLookupTable('transparent_elements', 'a ins del canvas map');
       const wrapBlockElementsMap = createLookupTable('wrap_block_elements', 'pre ' + headings);
       each$b('script noscript iframe noframes noembed title style textarea xmp plaintext'.split(' '), name => {
@@ -4181,7 +4181,7 @@
     const each$a = Tools.each;
     const grep = Tools.grep;
     const internalStyleName = 'data-mce-style';
-    const numericalCssMap = Tools.makeMap('fill-opacity font-weight line-height opacity orphans widows z-index zoom', ' ');
+    const numericalCssMap = Tools.makeMap('fill-opacity fonts-weight line-height opacity orphans widows z-index zoom', ' ');
     const legacySetAttribute = (elm, name, value) => {
       if (isNullable(value) || value === '') {
         remove$a(elm, name);
@@ -7026,7 +7026,7 @@
             };
           }
         },
-        default: 'font-family font-size font-weight font-style text-decoration text-transform color background-color border border-radius outline text-shadow'
+        default: 'fonts-family fonts-size fonts-weight fonts-style text-decoration text-transform color background-color border border-radius outline text-shadow'
       });
       registerOption('custom_ui_selector', {
         processor: 'string',
@@ -15285,7 +15285,7 @@
     // We still need to know them so that we can do namespace
     // checks properly in case one wants to add them to
     // allow-list.
-    const svgDisallowed = freeze(['animate', 'color-profile', 'cursor', 'discard', 'font-face', 'font-face-format', 'font-face-name', 'font-face-src', 'font-face-uri', 'foreignobject', 'hatch', 'hatchpath', 'mesh', 'meshgradient', 'meshpatch', 'meshrow', 'missing-glyph', 'script', 'set', 'solidcolor', 'unknown', 'use']);
+    const svgDisallowed = freeze(['animate', 'color-profile', 'cursor', 'discard', 'fonts-face', 'fonts-face-format', 'fonts-face-name', 'fonts-face-src', 'fonts-face-uri', 'foreignobject', 'hatch', 'hatchpath', 'mesh', 'meshgradient', 'meshpatch', 'meshrow', 'missing-glyph', 'script', 'set', 'solidcolor', 'unknown', 'use']);
     const mathMl$1 = freeze(['math', 'menclose', 'merror', 'mfenced', 'mfrac', 'mglyph', 'mi', 'mlabeledtr', 'mmultiscripts', 'mn', 'mo', 'mover', 'mpadded', 'mphantom', 'mroot', 'mrow', 'ms', 'mspace', 'msqrt', 'mstyle', 'msub', 'msup', 'msubsup', 'mtable', 'mtd', 'mtext', 'mtr', 'munder', 'munderover', 'mprescripts']);
 
     // Similarly to SVG, we want to know all MathML elements,
@@ -20146,7 +20146,7 @@
             collapsed: false,
             classes: 'align-left',
             ceFalseOverride: true,
-            preview: 'font-family font-size'
+            preview: 'fonts-family fonts-size'
           },
           {
             selector: 'figure,p,h1,h2,h3,h4,h5,h6,td,th,tr,div,ul,ol,li,pre',
@@ -20158,7 +20158,7 @@
             selector: 'img,audio,video',
             collapsed: false,
             styles: { float: 'left' },
-            preview: 'font-family font-size'
+            preview: 'fonts-family fonts-size'
           },
           {
             selector: 'table',
@@ -20170,7 +20170,7 @@
             onformat: table => {
               dom.setStyle(table, 'float', null);
             },
-            preview: 'font-family font-size'
+            preview: 'fonts-family fonts-size'
           },
           {
             selector: '.mce-preview-object,[data-ephox-embed-iri]',
@@ -20183,14 +20183,14 @@
             selector: 'figure,p,h1,h2,h3,h4,h5,h6,td,th,tr,div,ul,ol,li,pre',
             styles: { textAlign: 'center' },
             inherit: false,
-            preview: 'font-family font-size'
+            preview: 'fonts-family fonts-size'
           },
           {
             selector: 'figure.image',
             collapsed: false,
             classes: 'align-center',
             ceFalseOverride: true,
-            preview: 'font-family font-size'
+            preview: 'fonts-family fonts-size'
           },
           {
             selector: 'img,audio,video',
@@ -20209,7 +20209,7 @@
               marginLeft: 'auto',
               marginRight: 'auto'
             },
-            preview: 'font-family font-size'
+            preview: 'fonts-family fonts-size'
           },
           {
             selector: '.mce-preview-object',
@@ -20237,19 +20237,19 @@
             collapsed: false,
             classes: 'align-right',
             ceFalseOverride: true,
-            preview: 'font-family font-size'
+            preview: 'fonts-family fonts-size'
           },
           {
             selector: 'figure,p,h1,h2,h3,h4,h5,h6,td,th,tr,div,ul,ol,li,pre',
             styles: { textAlign: 'right' },
             inherit: false,
-            preview: 'font-family font-size'
+            preview: 'fonts-family fonts-size'
           },
           {
             selector: 'img,audio,video',
             collapsed: false,
             styles: { float: 'right' },
-            preview: 'font-family font-size'
+            preview: 'fonts-family fonts-size'
           },
           {
             selector: 'table',
@@ -20261,7 +20261,7 @@
             onformat: table => {
               dom.setStyle(table, 'float', null);
             },
-            preview: 'font-family font-size'
+            preview: 'fonts-family fonts-size'
           },
           {
             selector: '.mce-preview-object,[data-ephox-embed-iri]',
@@ -20274,7 +20274,7 @@
             selector: 'figure,p,h1,h2,h3,h4,h5,h6,td,th,tr,div,ul,ol,li,pre',
             styles: { textAlign: 'justify' },
             inherit: false,
-            preview: 'font-family font-size'
+            preview: 'fonts-family fonts-size'
           }],
         bold: [
           {
@@ -20438,7 +20438,7 @@
         },
         removeformat: [
           {
-            selector: 'b,strong,em,i,font,u,strike,s,sub,sup,dfn,code,samp,kbd,var,cite,mark,q,del,ins,small',
+            selector: 'b,strong,em,i,fonts,u,strike,s,sub,sup,dfn,code,samp,kbd,var,cite,mark,q,del,ins,small',
             remove: 'all',
             split: true,
             expand: false,

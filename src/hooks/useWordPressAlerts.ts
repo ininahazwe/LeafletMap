@@ -172,7 +172,7 @@ export const useWordPressAlerts = (): UseWordPressAlertsReturn => {
         link: post.link,
         category: determineCategory(post),
         countryIso3: extractCountryISO3(post),
-        // countryName sera ajouté par page.tsx via le mapping avec la base countries
+        // countryName sera ajouté par article.tsx via le mapping avec la base countries
         countryName: post.country || undefined,
       }));
 
