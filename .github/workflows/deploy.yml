@@ -1,0 +1,158 @@
+name: 🚀 Deploy Mediascape (Next.js standalone)
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Deploy to cPanel
+        id: deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: 600s
+          command_timeout: 600s
+          script: |
+            set -e
+            echo "=== Starting deployment ==="
+
+            REPO_PATH="/home/${{ secrets.SSH_USER }}/repositories/mediascape"
+            PROD_PATH="/home/${{ secrets.SSH_USER }}/public_html/mediascape.mfwa.org"
+            BACKUP_PATH="/home/${{ secrets.SSH_USER }}/backups/mediascape-$(date +%Y%m%d-%H%M%S)"
+
+            echo "📦 Creating backup..."
+            mkdir -p "$(dirname "$BACKUP_PATH")"
+            cp -r "$PROD_PATH" "$BACKUP_PATH" 2>/dev/null || true
+            echo "✅ Backup created"
+
+            echo "📥 Pulling latest code..."
+            cd "$REPO_PATH"
+            git fetch origin main --quiet
+            git reset --hard origin/main --quiet
+            COMMIT_HASH=$(git rev-parse --short HEAD)
+            echo "✅ Git pulled (commit: $COMMIT_HASH)"
+
+            echo "🔎 Checking .env.local présent (non versionné, doit déjà exister sur le serveur)..."
+            if [ ! -f "$REPO_PATH/.env.local" ]; then
+              echo "❌ $REPO_PATH/.env.local introuvable. Créer ce fichier une fois manuellement sur le serveur (DB_*, JWT_SECRET, PORT, etc.) avant le premier déploiement."
+              exit 1
+            fi
+            echo "✅ .env.local présent"
+
+            echo "📦 Installing dependencies..."
+            npm ci --quiet
+            echo "✅ Dependencies installed"
+
+            echo "🎨 Building (output: standalone)..."
+            npm run build --quiet
+            echo "✅ Build terminé"
+
+            echo "📤 Deploying files..."
+            mkdir -p "$PROD_PATH"
+            rm -rf "$PROD_PATH"/*
+            cp -r "$REPO_PATH/.next/standalone/." "$PROD_PATH/"
+            mkdir -p "$PROD_PATH/.next"
+            cp -r "$REPO_PATH/.next/static" "$PROD_PATH/.next/static"
+            cp -r "$REPO_PATH/public" "$PROD_PATH/public"
+            cp "$REPO_PATH/.env.local" "$PROD_PATH/.env"
+            echo "✅ Files deployed"
+
+            echo "🔧 Writing .htaccess (proxy vers Node)..."
+            PORT=$(grep -E '^PORT=' "$PROD_PATH/.env" | cut -d '=' -f2)
+            PORT=${PORT:-3004}
+            printf 'RewriteEngine On\nRewriteRule ^(.*)$ http://127.0.0.1:%s/$1 [P,L]\n' "$PORT" > "$PROD_PATH/.htaccess"
+            echo "✅ .htaccess écrit (port $PORT)"
+
+            echo "🛑 Clearing old PM2 process..."
+            pm2 delete mediascape --silent || true
+            sleep 1
+
+            echo "🚀 Starting PM2..."
+            cd "$PROD_PATH"
+            pm2 start server.js \
+              --name "mediascape" \
+              --watch false \
+              --max-memory-restart "500M" \
+              --update-env \
+              --silent
+            sleep 4
+            pm2 save --silent
+            echo "✅ PM2 started"
+
+            echo "🔍 Validating..."
+            ERRORS=0
+            [ -f "$PROD_PATH/server.js" ]        && echo "  ✅ server.js"      || { echo "  ❌ server.js missing"; ERRORS=$((ERRORS+1)); }
+            [ -d "$PROD_PATH/.next/static" ]     && echo "  ✅ .next/static"   || { echo "  ❌ .next/static missing"; ERRORS=$((ERRORS+1)); }
+            [ -f "$PROD_PATH/.env" ]             && echo "  ✅ .env"           || { echo "  ❌ .env missing"; ERRORS=$((ERRORS+1)); }
+
+            PM2_STATUS=$(pm2 jlist | node -e "
+            const fs = require('fs');
+            const list = JSON.parse(fs.readFileSync(0, 'utf-8'));
+            const app = list.find(p => p.name === 'mediascape');
+            if (!app) { console.log('missing'); process.exit(0); }
+            console.log(app.pm2_env.status);
+            ")
+
+            if [ "$PM2_STATUS" = "online" ]; then
+              echo "  ✅ PM2 online"
+            else
+              echo "  ❌ PM2 not online (status: $PM2_STATUS)"
+              ERRORS=$((ERRORS+1))
+            fi
+
+            if [ $ERRORS -gt 0 ]; then
+              echo "❌ Validation failed ($ERRORS errors)"
+              exit 1
+            fi
+            echo "✅ All validations passed"
+            echo "=== ✨ Deploy complete (commit: $COMMIT_HASH) ==="
+
+      - name: Test health endpoint
+        run: |
+          sleep 5
+          for i in {1..5}; do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" https://mediascape.mfwa.org/api/countries)
+            if [ "$CODE" = "200" ]; then echo "✅ Health OK"; exit 0; fi
+            echo "⏳ Attempt $i/5 (HTTP $CODE), retrying..."
+            sleep 3
+          done
+          echo "❌ Health endpoint failed"; exit 1
+
+      - name: Success notification
+        if: success()
+        run: |
+          echo "✅ DEPLOYMENT SUCCESSFUL"
+          echo "App: https://mediascape.mfwa.org"
+          echo "Commit: ${{ github.sha }}"
+
+      - name: Failure - Rollback
+        if: failure()
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            PROD_PATH="/home/${{ secrets.SSH_USER }}/public_html/mediascape.mfwa.org"
+            LATEST_BACKUP=$(ls -td /home/${{ secrets.SSH_USER }}/backups/mediascape-* 2>/dev/null | head -1)
+            if [ -n "$LATEST_BACKUP" ] && [ -d "$LATEST_BACKUP" ]; then
+              echo "🔄 Rolling back to $LATEST_BACKUP"
+              pm2 stop mediascape --silent || true
+              rm -rf "$PROD_PATH"
+              cp -r "$LATEST_BACKUP" "$PROD_PATH"
+              cd "$PROD_PATH"
+              pm2 start server.js --name mediascape --silent
+              sleep 2
+              echo "✅ Rollback complete"
+            else
+              echo "⚠️ No backup found — prod preserved as-is"
+            fi

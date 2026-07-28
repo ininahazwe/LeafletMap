@@ -9,18 +9,21 @@ export interface Database {
           name_fr: string;
           name_en: string;
           region: string | null;
+          tooltip_info: string | null;
         };
         Insert: {
           iso_a3: string;
           name_fr: string;
           name_en: string;
           region?: string | null;
+          tooltip_info?: string | null;
         };
         Update: {
           iso_a3?: string;
           name_fr?: string;
           name_en?: string;
           region?: string | null;
+          tooltip_info?: string | null;
         };
       };
       media_environment: {
@@ -125,6 +128,7 @@ export interface Database {
 // Types utilitaires de base
 export type Country = Database['public']['Tables']['countries']['Row'];
 export type MediaEnvironment = Database['public']['Tables']['media_environment']['Row'];
+export type Ranking = Database['public']['Tables']['rankings']['Row'];
 
 // SIMPLIFICATION : Plus de rankings, focus sur media_environment
 export type CountryWithMedia = Country & {

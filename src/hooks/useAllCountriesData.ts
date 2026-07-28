@@ -1,6 +1,5 @@
-// hooks/useAllCountries.ts
+// hooks/useAllCountriesData.ts
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
 import type { CountryListItem } from '../app/types/database';
 
 interface CountryWithTooltip extends CountryListItem {
@@ -14,7 +13,7 @@ interface UseAllCountriesReturn {
   refetch: () => void;
 }
 
-interface SupabaseCountryRow {
+interface ApiCountryRow {
   id: number;
   iso_a3: string;
   name_fr: string | null;
@@ -33,24 +32,15 @@ export const useAllCountries = (): UseAllCountriesReturn => {
     setError(null);
 
     try {
-      const { data, error: supabaseError } = await supabase
-        .from('countries')
-        .select(`
-          id,
-          iso_a3,
-          name_fr,
-          name_en,
-          region,
-          tooltip_info
-        `)
-        .order('name_fr', { ascending: true });
+      const res = await fetch('/api/countries');
+      const json = await res.json();
 
-      if (supabaseError) {
-        throw new Error(`Loading error: ${supabaseError.message}`);
+      if (!res.ok) {
+        throw new Error(`Loading error: ${json.error ?? res.statusText}`);
       }
 
       // Transformation des données avec vérification
-      const transformedData: CountryWithTooltip[] = ((data as SupabaseCountryRow[]) || [])
+      const transformedData: CountryWithTooltip[] = ((json.data as ApiCountryRow[]) || [])
         .filter(item => item.iso_a3)
         .map(item => ({
           id: item.id,

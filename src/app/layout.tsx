@@ -1,6 +1,8 @@
-import type { Metadata, Viewport } from "next";
+import  type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import React from "react";
+import { SITE_URL, SITE_NAME } from "@/lib/seo";
 
 const geistSans = Geist({
     variable: "--fonts-geist-sans",
@@ -20,7 +22,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-    metadataBase: new URL("https://west-africa-mediascape.com"), // À remplacer par ton domaine réel
+    metadataBase: new URL(SITE_URL),
 
     title: {
         default: "West Africa Mediascape — Interactive Press Freedom Map",
@@ -43,45 +45,39 @@ export const metadata: Metadata = {
 
     authors: [
         {
-            name: "West Africa Mediascape",
-            url: "https://west-africa-mediascape.com",
+            name: SITE_NAME,
+            url: SITE_URL,
         },
     ],
-    creator: "West Africa Mediascape",
-    publisher: "West Africa Mediascape",
+    creator: SITE_NAME,
+    publisher: SITE_NAME,
 
     openGraph: {
         type: "website",
         locale: "en_US",
         alternateLocale: ["fr_FR"],
-        url: "https://west-africa-mediascape.com",
-        siteName: "West Africa Mediascape",
+        url: SITE_URL,
+        siteName: SITE_NAME,
         title: "West Africa Mediascape — Interactive Press Freedom Map",
         description: "Explore media freedom and press environment across 16 West African countries",
+        // TODO: remplacer par de vraies images og-image.png (1200x630) / og-image-square.png
+        // une fois produites — /logo.png sert de repli pour éviter un aperçu social cassé.
         images: [
             {
-                url: "/og-image.png",
-                width: 1200,
-                height: 630,
-                alt: "West Africa Media Freedom Map",
-                type: "image/png",
-            },
-            {
-                url: "/og-image-square.png",
+                url: "/logo.png",
                 width: 800,
-                height: 800,
-                alt: "West Africa Mediascape Logo",
+                height: 220,
+                alt: "West Africa Mediascape",
                 type: "image/png",
             },
         ],
     },
 
     twitter: {
-        card: "summary_large_image",
+        card: "summary",
         title: "West Africa Mediascape",
         description: "Interactive map of press freedom across West Africa",
-        images: ["/og-image.png"],
-        creator: "@mediascape_wa",
+        images: ["/logo.png"],
     },
 
     robots: {
@@ -98,16 +94,11 @@ export const metadata: Metadata = {
     },
 
     alternates: {
-        canonical: "https://west-africa-mediascape.com",
-        languages: {
-            en: "https://west-africa-mediascape.com/en",
-            fr: "https://west-africa-mediascape.com/fr",
-        },
+        canonical: SITE_URL,
     },
 
     icons: {
         icon: "/favicon.ico",
-        apple: "/apple-icon.png",
     },
 
     category: "News & Media",
@@ -131,25 +122,22 @@ export default function RootLayout({
             {/* DNS prefetch */}
             <link rel="dns-prefetch" href="https://api.wordpress.com" />
 
-            {/* JSON-LD Schema (Organisation) */}
+            {/* JSON-LD Schema (Organisation) — signal d'entité/confiance pour Google et les moteurs IA */}
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{
                     __html: JSON.stringify({
                         "@context": "https://schema.org",
                         "@type": "Organization",
-                        name: "West Africa Mediascape",
-                        url: "https://west-africa-mediascape.com",
-                        logo: "https://west-africa-mediascape.com/logo.png",
+                        name: SITE_NAME,
+                        url: SITE_URL,
+                        logo: `${SITE_URL}/logo.png`,
                         description:
                             "Interactive map visualizing media freedom and press environment across West Africa",
-                        sameAs: [
-                            "https://twitter.com/mediascape_wa",
-                            "https://linkedin.com/company/mediascape",
-                        ],
-                        contactPoint: {
-                            "@type": "ContactPoint",
-                            contactType: "Customer Support",
+                        parentOrganization: {
+                            "@type": "Organization",
+                            name: "Media Foundation for West Africa",
+                            url: "https://mfwa.org",
                         },
                     }),
                 }}
@@ -162,9 +150,9 @@ export default function RootLayout({
                     __html: JSON.stringify({
                         "@context": "https://schema.org",
                         "@type": "WebApplication",
-                        name: "West Africa Mediascape",
+                        name: SITE_NAME,
                         description: "Interactive press freedom monitoring map",
-                        url: "https://west-africa-mediascape.com",
+                        url: SITE_URL,
                         applicationCategory: "NewsApplication",
                         offers: {
                             "@type": "Offer",
@@ -178,6 +166,20 @@ export default function RootLayout({
         <body
             className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
+        <div className="grid-lines">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div className="show-tablet"></div>
+            <div className="show-tablet"></div>
+            <div className="show-tablet"></div>
+            <div className="show-tablet"></div>
+            <div className="show-desktop"></div>
+            <div className="show-desktop"></div>
+            <div className="show-desktop"></div>
+            <div className="show-desktop"></div>
+        </div>
         <main role="main">
             {children}
         </main>

@@ -1,10 +1,11 @@
 // next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export', // C'est la ligne clé pour l'export statique
-  // Assurez-vous d'avoir aussi l'option d'image non optimisée si vous utilisez <Image/>
+  // Mode serveur Node (PM2) requis pour les routes API (/api/*, MySQL, JWT).
+  // 'standalone' produit un bundle minimal (.next/standalone) avec son propre server.js.
+  output: 'standalone',
   images: {
-    unoptimized: true,
+    unoptimized: true, // évite la dépendance à 'sharp' sur cPanel
   },
 };
 

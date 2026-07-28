@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,6 +10,7 @@ import alert from "../../public/alert.svg";
 // Hooks
 import { useAllCountries } from "@/hooks/useAllCountriesData";
 import { useWordPressAlerts } from "@/hooks/useWordPressAlerts";
+import { slugifyCountryName } from "@/lib/slug";
 
 // Désactiver SSR pour TOUS les composants qui utilisent window/document
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
@@ -17,8 +18,13 @@ const CountryModal = dynamic(() => import("@/components/CountryModal"), { ssr: f
 const AlertCarousel = dynamic(() => import("@/components/AlertCarousel"), { ssr: false });
 
 export default function Page() {
+    // État local pour la modal (rendue directement ici, pas de routing serveur).
+    // L'URL est synchronisée manuellement via history.pushState pour rester
+    // partageable/indexable (lien direct -> /country/[iso3] page complète),
+    // sans passer par les intercepting routes de Next.js (instables en nav. programmatique).
     const [selectedCountryIso3, setSelectedCountryIso3] = useState<string>("");
     const [isModalOpen, setIsModalOpen] = useState(false);
+
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [isMounted, setIsMounted] = useState(false);
@@ -60,19 +66,47 @@ export default function Page() {
         }));
     }, [alerts, countries]);
 
-    // Ouvre le modal + replie la sidebar
-    const handleCountryClick = (iso3: string) => {
-        setSelectedCountryIso3(iso3);
+    // Ouvre le modal + met à jour l'URL (nom complet du pays, partageable/indexable) + replie la sidebar
+    const handleCountryClick = useCallback((iso3: string) => {
+        setSelectedCountryIso3(iso3.toUpperCase());
         setIsModalOpen(true);
         setSidebarOpen(false);
         setMobileMenuOpen(false);
-    };
 
-    // Ferme le modal + redéplie la sidebar
-    const handleModalClose = () => {
+        const country = countries.find((c) => c.iso_a3.toUpperCase() === iso3.toUpperCase());
+        const slug = country ? slugifyCountryName(country.name_en) : iso3.toLowerCase();
+        window.history.pushState(null, "", `/country/${slug}`);
+    }, [countries]);
+
+    // Ferme le modal + revient à "/" + redéplie la sidebar
+    const handleModalClose = useCallback(() => {
         setIsModalOpen(false);
         setSidebarOpen(true);
-    };
+        if (window.location.pathname !== "/") {
+            window.history.pushState(null, "", "/");
+        }
+    }, []);
+
+    // Bouton précédent/suivant du navigateur
+    useEffect(() => {
+        const onPopState = () => {
+            const match = window.location.pathname.match(/^\/country\/([a-z0-9-]+)$/);
+            const country = match
+                ? countries.find((c) => slugifyCountryName(c.name_en) === match[1])
+                : null;
+
+            if (country) {
+                setSelectedCountryIso3(country.iso_a3.toUpperCase());
+                setIsModalOpen(true);
+                setSidebarOpen(false);
+            } else {
+                setIsModalOpen(false);
+                setSidebarOpen(true);
+            }
+        };
+        window.addEventListener("popstate", onPopState);
+        return () => window.removeEventListener("popstate", onPopState);
+    }, [countries]);
 
     // Scores démos
     const scoresByIso3 = useMemo(() => {
@@ -110,7 +144,7 @@ export default function Page() {
 
     const countriesByRegion = useMemo(() => {
         return filteredCountries.reduce((acc, c) => {
-            const region = c.region || "Non spécifiée";
+            const region = c.region || "Unspecified";
             (acc[region] ||= []).push(c);
             return acc;
         }, {} as Record<string, typeof countries>);
@@ -278,7 +312,7 @@ export default function Page() {
                             </div>
                         </div>
 
-                        <nav className="max-h-[60vh] md:max-h-[calc(100vh-480px)] overflow-y-auto" aria-label="West African countries">
+                        <nav className="max-h-[60vh] md:max-h-[calc(100vh-480px)] overflow-y-auto bg-white" aria-label="West African countries">
                             {Object.entries(countriesByRegion).map(([region, list]) => (
                                 <section key={region} className="border-b border-gray-100">
                                     <h2 className="px-6 py-3 bg-gray-50 font-semibold text-sm text-gray-700">
@@ -393,7 +427,7 @@ export default function Page() {
                 <AlertCarousel alerts={alertsWithCountryNames} isHidden={isModalOpen} />
             </div>
 
-            {/* MODAL bottom sheet */}
+            {/* MODAL panneau latéral */}
             <CountryModal
                 isOpen={isModalOpen}
                 onClose={handleModalClose}

@@ -1,0 +1,19 @@
+# West Africa Mediascape
+
+> Interactive map and country-by-country database tracking media freedom, legal
+> environment, media regulators, journalist associations, and press freedom
+> alerts across 16 West African countries. Published by the Media Foundation
+> for West Africa (MFWA).
+
+## Key resources
+
+- [Interactive map](https://mediascape.mfwa.org/): entry point, one country profile per West African country
+- [Sitemap](https://mediascape.mfwa.org/sitemap.xml): full list of country profile pages
+- [Media Foundation for West Africa](https://mfwa.org): parent organization, source of press freedom alerts and country reporting
+
+## Notes
+
+Each country page (`/country/{country-name}`) covers: legal environment, media
+regulators, journalists associations, radio/TV/newspapers/online media, state-
+owned media, news agency, internet freedom, and a chronological feed of press
+freedom alerts filterable by year.

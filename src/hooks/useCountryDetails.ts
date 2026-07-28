@@ -1,6 +1,5 @@
 // hooks/useCountryDetails.ts
 import { useState, useEffect, useCallback  } from 'react';
-import { supabase } from '@/lib/supabase';
 import type { CountryWithMedia } from '@/app/types/database';
 
 interface UseCountryDetailsReturn {
@@ -25,20 +24,14 @@ export const useCountryDetails = (iso3: string): UseCountryDetailsReturn => {
     setError(null);
 
     try {
-      const { data: countryWithMedia, error: countryError } = await supabase
-        .from('countries')
-        .select(`
-          *,
-          media_environment(*)
-        `)
-        .eq('iso_a3', iso3.toUpperCase())
-        .single();
+      const res = await fetch(`/api/countries/${iso3.toUpperCase()}`);
+      const json = await res.json();
 
-      if (countryError) {
-        throw new Error(`Pays introuvable pour ISO3 "${iso3}": ${countryError.message}`);
+      if (!res.ok) {
+        throw new Error(`Pays introuvable pour ISO3 "${iso3}": ${json.error ?? res.statusText}`);
       }
 
-      setCountryData(countryWithMedia as CountryWithMedia);
+      setCountryData(json.data as CountryWithMedia);
 
     } catch (err: unknown) {
       console.error('Error fetching country details:', err);
