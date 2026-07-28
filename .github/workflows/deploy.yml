@@ -69,7 +69,7 @@ jobs:
             echo "🔧 Writing .htaccess (proxy vers Node)..."
             export PORT=$(grep -E '^PORT=' "$PROD_PATH/.env" | cut -d '=' -f2)
             export PORT=${PORT:-3004}
-            printf 'RewriteEngine On\nRewriteRule ^(.*)$ http://127.0.0.1:%s/$1 [P,L]\n' "$PORT" > "$PROD_PATH/.htaccess"
+            printf '<IfModule mod_rewrite.c>\n  RewriteEngine On\n  RewriteRule ^(.*)$ http://127.0.0.1:%s/$1 [P,L]\n</IfModule>\n' "$PORT" > "$PROD_PATH/.htaccess"
             echo "✅ .htaccess écrit (port $PORT)"
 
             echo "🛑 Clearing old PM2 process..."
