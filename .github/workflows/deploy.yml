@@ -73,7 +73,10 @@ jobs:
             echo "🔧 Writing .htaccess (proxy vers Node)..."
             export PORT=$(grep -E '^PORT=' "$PROD_PATH/.env" | cut -d '=' -f2)
             export PORT=${PORT:-3004}
-            printf '<IfModule mod_rewrite.c>\n  RewriteEngine On\n  RewriteRule ^(.*)$ http://127.0.0.1:%s/$1 [P,L]\n</IfModule>\n' "$PORT" > "$PROD_PATH/.htaccess"
+            # DirectoryIndex disabled : sans ça, Apache résout "/" en "index.html"
+            # via mod_dir AVANT que la règle de rewrite ne voie l'URL d'origine,
+            # et proxy vers /index.html au lieu de / (route Next.js inexistante -> 404).
+            printf 'DirectoryIndex disabled\n\n<IfModule mod_rewrite.c>\n  RewriteEngine On\n  RewriteRule ^(.*)$ http://127.0.0.1:%s/$1 [P,L]\n</IfModule>\n' "$PORT" > "$PROD_PATH/.htaccess"
             echo "✅ .htaccess écrit (port $PORT)"
 
             echo "🛑 Clearing old PM2 process..."
