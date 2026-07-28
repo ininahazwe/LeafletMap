@@ -52,6 +52,10 @@ jobs:
             npm ci --quiet
             echo "✅ Dependencies installed"
 
+            echo "🧹 Clearing stale Next.js build cache..."
+            rm -rf .next
+            echo "✅ .next removed"
+
             echo "🎨 Building (output: standalone)..."
             npm run build --quiet
             echo "✅ Build terminé"
