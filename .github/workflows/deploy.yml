@@ -67,8 +67,8 @@ jobs:
             echo "✅ Files deployed"
 
             echo "🔧 Writing .htaccess (proxy vers Node)..."
-            PORT=$(grep -E '^PORT=' "$PROD_PATH/.env" | cut -d '=' -f2)
-            PORT=${PORT:-3004}
+            export PORT=$(grep -E '^PORT=' "$PROD_PATH/.env" | cut -d '=' -f2)
+            export PORT=${PORT:-3004}
             printf 'RewriteEngine On\nRewriteRule ^(.*)$ http://127.0.0.1:%s/$1 [P,L]\n' "$PORT" > "$PROD_PATH/.htaccess"
             echo "✅ .htaccess écrit (port $PORT)"
 
@@ -78,7 +78,16 @@ jobs:
 
             echo "🚀 Starting PM2..."
             cd "$PROD_PATH"
-            pm2 start server.js \
+            # PORT doit être exporté (pas juste une variable shell locale) pour que
+            # le process Node forké par PM2 en hérite. Sans ça, le serveur standalone
+            # retombe sur le défaut 3000, qui peut déjà être pris par un autre site
+            # sur un serveur mutualisé (EADDRINUSE).
+            # HOSTNAME=0.0.0.0 force le bind sur toutes les interfaces (donc aussi
+            # 127.0.0.1, utilisé par le proxy .htaccess) : sur ce serveur, HOSTNAME
+            # est déjà défini par l'environnement système au FQDN de la machine, ce
+            # qui fait écouter Next uniquement sur cette interface-là sinon.
+            export HOSTNAME=0.0.0.0
+            PORT="$PORT" HOSTNAME="$HOSTNAME" pm2 start server.js \
               --name "mediascape" \
               --watch false \
               --max-memory-restart "500M" \
