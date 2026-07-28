@@ -288,26 +288,28 @@ export default function CountryDetailContent({ iso3, embedded = false, onClose }
           </div>
 
           {/* Onglets (soulignés, sans bordure de séparation) */}
-          <div className="flex gap-6 mt-5">
+          <div className="flex gap-6 mt-5 items-center">
             {tabs.map((tab) => (
                 <button
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key)}
-                    className={`pb-2 text-sm font-medium border-b-2 transition-colors text-xl ${
+                    className={`text-xl font-medium transition-all duration-200 ${
                         activeTab === tab.key
-                            ? "border-gray-900 text-gray-900"
-                            : "border-transparent text-gray-400 hover:text-gray-600"
+                            ? "bg-[#f5f5dc] text-gray-900 px-5 py-1.5 rounded-[20px]" /* Style beige uniquement pour l'actif */
+                            : "text-gray-400 hover:text-gray-600 px-5 py-1.5" /* Même padding pour éviter les sauts de mise en page */
                     }`}
                 >
                   {tab.label}
                   {tab.key === "alerts" && alerts.length > 0 && (
-                      <span className="ml-1.5 text-xs text-gray-400">({alerts.length})</span>
+                      <span className={`ml-1.5 text-xs ${activeTab === tab.key ? "text-gray-600" : "text-gray-400"}`}>
+            ({alerts.length})
+          </span>
                   )}
                 </button>
             ))}
-          </div>
+        </div>
 
-          {/* Contenu */}
+        {/* Contenu */}
           <div className="mt-8">
             {loading ? (
                 <div className="flex items-center justify-center py-24">

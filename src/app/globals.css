@@ -1414,9 +1414,9 @@ aside.fixed.right-6 {
 }
 
 .content-grid-embedded {
-  max-width: 1200px;
+  max-width: 1000px;
   margin-inline: auto;
-  padding-inline: 16px;
+  padding-inline: 0;
 }
 
 h3{
@@ -1451,4 +1451,31 @@ h3{
 
 .alert-card{
   border-bottom: 1px solid #e1e1e1;
+}
+
+/* 1. Pour Chrome, Safari et Edge */
+::-webkit-scrollbar {
+  width: 10px; /* Largeur de la barre verticale */
+  height: 10px; /* Hauteur de la barre horizontale */
+  margin-right: 20px;
+}
+
+/*::-webkit-scrollbar-track {
+  background: #f1f1f1;  Couleur du fond de la barre
+  border-radius: 5px;
+}*/
+
+::-webkit-scrollbar-thumb {
+  background: #f5f5dc; /* Couleur de la barre de défilement (ex: beige) */
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d4d4b6; /* Couleur au survol */
+}
+
+/* 2. Pour Firefox (Standard officiel) */
+* {
+  scrollbar-width: thin; /* Épaisseur : auto ou thin */
+  scrollbar-color: #f5f5dc #f1f1f1; /* [Couleur du curseur] [Couleur du fond] */
 }

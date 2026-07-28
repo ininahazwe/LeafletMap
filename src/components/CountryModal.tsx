@@ -66,9 +66,9 @@ export default function CountryModal({ isOpen, onClose, iso3 }: CountryModalProp
       {/* Panneau latéral — pleine largeur, layout identique à la page /country/[slug].
           CountryDetailContent gère son propre scroll interne (h-full overflow-y-auto). */}
       <div
-        className={`fixed inset-y-0 right-0 z-[10000] w-full bg-white shadow-2xl transition-transform duration-500 ease-out overflow-hidden ${
-          visible ? "translate-x-0" : "translate-x-full"
-        }`}
+          className={`fixed inset-y-0 right-0 z-[10000] w-[calc(100vw-10rem)] bg-white shadow-2xl transition-transform duration-500 ease-out overflow-hidden ${
+              visible ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         <CountryDetailContent iso3={iso3} embedded onClose={onClose} />
       </div>
