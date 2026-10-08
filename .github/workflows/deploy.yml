@@ -1,0 +1,44 @@
+name: Deploy LeafletMap to cPanel
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+
+            REPO=/home/CPANELUSER/repositories/leafletmap
+            PROD=/home/CPANELUSER/public_html/ton-domaine.org
+
+            cd "$REPO"
+            git pull origin main
+
+            # .env.local de prod : fichier maintenu à la main sur le
+            # serveur (jamais commité), recopié avant chaque build.
+            cp "$PROD/.env.production.local" "$REPO/.env.local"
+
+            npm ci
+            npm run build   # next build (output: 'export') -> $REPO/out
+
+            # Site statique : sync complet, sans toucher à /api (backend PHP)
+            rsync -a --delete --exclude 'api' "$REPO/out/" "$PROD/"
+
+            # API PHP : sync sans écraser config.php (secrets DB/JWT,
+            # jamais commité, créé une fois à la main sur le serveur)
+            rsync -a --exclude 'config.php' --exclude 'config.example.php' \
+              "$REPO/backend/" "$PROD/api/"
+
+            echo "Déploiement terminé."

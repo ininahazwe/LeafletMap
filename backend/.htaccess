@@ -1,0 +1,7 @@
+# Seuls les scripts sous api/ doivent être accessibles publiquement.
+# config.php, db.php, jwt.php, cors.php, bootstrap.php restent
+# accessibles uniquement en `require`, jamais en HTTP direct.
+
+<FilesMatch "^(config|config\.example|db|jwt|cors|bootstrap)\.php$">
+  Require all denied
+</FilesMatch>

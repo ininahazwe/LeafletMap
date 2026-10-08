@@ -34,6 +34,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env.local
 
+# backend PHP: config réelle avec les identifiants MySQL/JWT
+backend/config.php
+
 # vercel
 .vercel
 

@@ -9,18 +9,21 @@ export interface Database {
           name_fr: string;
           name_en: string;
           region: string | null;
+          tooltip_info: string | null;
         };
         Insert: {
           iso_a3: string;
           name_fr: string;
           name_en: string;
           region?: string | null;
+          tooltip_info?: string | null;
         };
         Update: {
           iso_a3?: string;
           name_fr?: string;
           name_en?: string;
           region?: string | null;
+          tooltip_info?: string | null;
         };
       };
       media_environment: {
@@ -138,4 +141,5 @@ export type CountryListItem = {
   name_fr: string;
   name_en: string;
   region: string | null;
+  tooltip_info?: string | null;
 };

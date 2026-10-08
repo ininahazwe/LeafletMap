@@ -1,6 +1,6 @@
 // hooks/useCountryDetails.ts
 import { useState, useEffect, useCallback  } from 'react';
-import { supabase } from '@/lib/supabase';
+import { api, ApiError } from '@/lib/api';
 import type { CountryWithMedia } from '@/app/types/database';
 
 interface UseCountryDetailsReturn {
@@ -25,24 +25,18 @@ export const useCountryDetails = (iso3: string): UseCountryDetailsReturn => {
     setError(null);
 
     try {
-      const { data: countryWithMedia, error: countryError } = await supabase
-        .from('countries')
-        .select(`
-          *,
-          media_environment(*)
-        `)
-        .eq('iso_a3', iso3.toUpperCase())
-        .single();
+      const countryWithMedia = await api.get<CountryWithMedia>(
+        `/country.php?iso3=${encodeURIComponent(iso3.toUpperCase())}`
+      );
 
-      if (countryError) {
-        throw new Error(`Pays introuvable pour ISO3 "${iso3}": ${countryError.message}`);
-      }
-
-      setCountryData(countryWithMedia as CountryWithMedia);
+      setCountryData(countryWithMedia);
 
     } catch (err: unknown) {
       console.error('Error fetching country details:', err);
-      setError(err instanceof Error ? err.message : 'Loading error des détails du pays');
+      const message = err instanceof ApiError
+        ? `Pays introuvable pour ISO3 "${iso3}": ${err.message}`
+        : (err instanceof Error ? err.message : 'Loading error des détails du pays');
+      setError(message);
       setCountryData(null);
     } finally {
       setLoading(false);

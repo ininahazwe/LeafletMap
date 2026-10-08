@@ -1,8 +1,7 @@
 // lib/supabase.ts
-import { createClient } from '@supabase/supabase-js'
-import type { Database } from '@/app/types/database'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+// DEPRECATED — plus utilisé depuis la migration vers MySQL/cPanel.
+// Remplacé par src/lib/api.ts (client fetch vers l'API PHP /backend).
+// Ce fichier n'est plus importé nulle part dans le projet.
+// À supprimer manuellement (le sandbox n'a pas les droits de suppression
+// sur le dossier partagé) : `rm src/lib/supabase.ts`.
+export {};
