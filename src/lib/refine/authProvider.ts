@@ -1,7 +1,6 @@
 "use client";
 
 import type { AuthProvider } from "@refinedev/core";
-import { api, ApiError } from "@/lib/api";
 
 interface LoginParams {
   email?: string;
@@ -9,90 +8,111 @@ interface LoginParams {
   redirectTo?: string;
 }
 
-interface MeResponse {
-  authenticated: boolean;
-  user: { id: number; email: string; name: string | null } | null;
-}
+const AUTH_ROUTES = [
+  "/admin/login",
+  "/admin/auth",
+  "/admin/forgot-password",
+  "/admin/reset-password",
+];
 
-// Remplace Supabase Auth : login/logout/session gérés par l'API PHP
-// (/backend/api/auth/*.php) via un cookie JWT httpOnly. Le contrôle
-// "admin" est implicite : seules les lignes de la table admin_users
-// permettent de se connecter (plus besoin de vérifier une table
-// admins séparée côté client).
 export const authProvider: AuthProvider = {
   login: async (params: LoginParams) => {
     const { email, password, redirectTo } = params ?? {};
 
     if (!email || !password) {
-      return { success: false, error: new Error("Email et mot de passe requis") };
+      return {
+        success: false,
+        error: new Error("Email and password required"),
+      };
     }
 
     try {
-      await api.post("/auth/login.php", { email, password });
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return {
+          success: false,
+          error: new Error(data.error ?? "Login error"),
+        };
+      }
+
       return {
         success: true,
         redirectTo: redirectTo ?? "/admin/countries",
       };
     } catch (e: unknown) {
-      const message = e instanceof ApiError ? e.message : "Erreur de connexion";
-      return { success: false, error: new Error(message) };
+      const errorMessage =
+        e instanceof Error ? e.message : "Unknown login error";
+      return { success: false, error: new Error(errorMessage) };
     }
   },
 
   logout: async () => {
     try {
-      await api.post("/auth/logout.php");
+      await fetch("/api/auth/logout", { method: "POST" });
       return { success: true, redirectTo: "/admin/login" };
     } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "Erreur de déconnexion";
-      return { success: false, error: new Error(message) };
+      const errorMessage =
+        e instanceof Error ? e.message : "Logout error";
+      return { success: false, error: new Error(errorMessage) };
     }
   },
 
   check: async () => {
     try {
-      await api.get<MeResponse>("/auth/me.php");
-      return { authenticated: true };
-    } catch (e: unknown) {
-      if (typeof window !== "undefined") {
-        const p = window.location.pathname;
-        const isAuthRoute =
-          p.startsWith("/admin/login") ||
-          p.startsWith("/admin/auth") ||
-          p.startsWith("/admin/forgot-password") ||
-          p.startsWith("/admin/reset-password");
+      const res = await fetch("/api/auth/me");
 
+      const isAuthRoute =
+        typeof window !== "undefined" &&
+        AUTH_ROUTES.some((p) => window.location.pathname.startsWith(p));
+
+      if (!res.ok) {
         if (isAuthRoute) {
           return { authenticated: false };
         }
+        return { authenticated: false, redirectTo: "/admin/login" };
       }
+
+      return { authenticated: true };
+    } catch (error) {
+      console.error("Check error:", error);
       return {
         authenticated: false,
         redirectTo: "/admin/login",
-        error: e instanceof Error ? e : new Error("Non authentifié"),
+        error:
+          error instanceof Error
+            ? error
+            : new Error("Authentication error"),
       };
     }
   },
 
   onError: async (error: Error) => {
     console.error("Auth error:", error);
-    return {
-      error,
-      logout: true,
-      redirectTo: "/admin/login",
-    };
+    return { error, logout: true, redirectTo: "/admin/login" };
   },
 
   getIdentity: async () => {
     try {
-      const res = await api.get<MeResponse>("/auth/me.php");
-      if (!res.user) return null;
+      const res = await fetch("/api/auth/me");
+      if (!res.ok) return null;
+
+      const { user } = await res.json();
+      if (!user) return null;
+
       return {
-        id: res.user.id,
-        name: res.user.name ?? res.user.email,
-        email: res.user.email,
+        id: user.id,
+        name: user.name ?? user.email ?? "",
+        email: user.email ?? "",
       };
-    } catch {
+    } catch (error) {
+      console.error("getIdentity error:", error);
       return null;
     }
   },

@@ -1,6 +1,5 @@
-// hooks/useAllCountries.ts
+// hooks/useAllCountriesData.ts
 import { useState, useEffect } from 'react';
-import { api } from '@/lib/api';
 import type { CountryListItem } from '../app/types/database';
 
 interface CountryWithTooltip extends CountryListItem {
@@ -33,10 +32,15 @@ export const useAllCountries = (): UseAllCountriesReturn => {
     setError(null);
 
     try {
-      const data = await api.get<ApiCountryRow[]>('/countries.php');
+      const res = await fetch('/api/countries');
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(`Loading error: ${json.error ?? res.statusText}`);
+      }
 
       // Transformation des données avec vérification
-      const transformedData: CountryWithTooltip[] = (data || [])
+      const transformedData: CountryWithTooltip[] = ((json.data as ApiCountryRow[]) || [])
         .filter(item => item.iso_a3)
         .map(item => ({
           id: item.id,

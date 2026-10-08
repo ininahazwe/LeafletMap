@@ -1,44 +1,174 @@
-name: Deploy LeafletMap to cPanel
+name: 🚀 Deploy Mediascape (Next.js standalone)
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch: {}
+    branches: [main]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy via SSH
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Deploy to cPanel
+        id: deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
+          username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
+          timeout: 600s
+          command_timeout: 600s
           script: |
             set -e
+            echo "=== Starting deployment ==="
 
-            REPO=/home/CPANELUSER/repositories/leafletmap
-            PROD=/home/CPANELUSER/public_html/ton-domaine.org
+            REPO_PATH="/home/${{ secrets.SSH_USER }}/repositories/mediascape"
+            PROD_PATH="/home/${{ secrets.SSH_USER }}/public_html/mediascape.mfwa.org"
+            BACKUP_PATH="/home/${{ secrets.SSH_USER }}/backups/mediascape-$(date +%Y%m%d-%H%M%S)"
 
-            cd "$REPO"
-            git pull origin main
+            echo "📦 Creating backup..."
+            mkdir -p "$(dirname "$BACKUP_PATH")"
+            cp -r "$PROD_PATH" "$BACKUP_PATH" 2>/dev/null || true
+            echo "✅ Backup created"
 
-            # .env.local de prod : fichier maintenu à la main sur le
-            # serveur (jamais commité), recopié avant chaque build.
-            cp "$PROD/.env.production.local" "$REPO/.env.local"
+            echo "📥 Pulling latest code..."
+            cd "$REPO_PATH"
+            git fetch origin main --quiet
+            git reset --hard origin/main --quiet
+            COMMIT_HASH=$(git rev-parse --short HEAD)
+            echo "✅ Git pulled (commit: $COMMIT_HASH)"
 
-            npm ci
-            npm run build   # next build (output: 'export') -> $REPO/out
+            echo "🔎 Checking .env.local présent (non versionné, doit déjà exister sur le serveur)..."
+            if [ ! -f "$REPO_PATH/.env.local" ]; then
+              echo "❌ $REPO_PATH/.env.local introuvable. Créer ce fichier une fois manuellement sur le serveur (DB_*, JWT_SECRET, PORT, etc.) avant le premier déploiement."
+              exit 1
+            fi
+            echo "✅ .env.local présent"
 
-            # Site statique : sync complet, sans toucher à /api (backend PHP)
-            rsync -a --delete --exclude 'api' "$REPO/out/" "$PROD/"
+            echo "📦 Installing dependencies..."
+            npm ci --quiet
+            echo "✅ Dependencies installed"
 
-            # API PHP : sync sans écraser config.php (secrets DB/JWT,
-            # jamais commité, créé une fois à la main sur le serveur)
-            rsync -a --exclude 'config.php' --exclude 'config.example.php' \
-              "$REPO/backend/" "$PROD/api/"
+            echo "🧹 Clearing stale Next.js build cache..."
+            rm -rf .next
+            echo "✅ .next removed"
 
-            echo "Déploiement terminé."
+            echo "🎨 Building (output: standalone)..."
+            npm run build --quiet
+            echo "✅ Build terminé"
+
+            echo "📤 Deploying files..."
+            mkdir -p "$PROD_PATH"
+            rm -rf "$PROD_PATH"/*
+            cp -r "$REPO_PATH/.next/standalone/." "$PROD_PATH/"
+            mkdir -p "$PROD_PATH/.next"
+            cp -r "$REPO_PATH/.next/static" "$PROD_PATH/.next/static"
+            cp -r "$REPO_PATH/public" "$PROD_PATH/public"
+            cp "$REPO_PATH/.env.local" "$PROD_PATH/.env"
+            echo "✅ Files deployed"
+
+            echo "🔧 Writing .htaccess (proxy vers Node)..."
+            export PORT=$(grep -E '^PORT=' "$PROD_PATH/.env" | cut -d '=' -f2)
+            export PORT=${PORT:-3004}
+            # DirectoryIndex disabled : sans ça, Apache résout "/" en "index.html"
+            # via mod_dir AVANT que la règle de rewrite ne voie l'URL d'origine,
+            # et proxy vers /index.html au lieu de / (route Next.js inexistante -> 404).
+            printf 'DirectoryIndex disabled\n\n<IfModule mod_rewrite.c>\n  RewriteEngine On\n  RewriteRule ^(.*)$ http://127.0.0.1:%s/$1 [P,L]\n</IfModule>\n' "$PORT" > "$PROD_PATH/.htaccess"
+            echo "✅ .htaccess écrit (port $PORT)"
+
+            echo "🛑 Clearing old PM2 process..."
+            pm2 delete mediascape --silent || true
+            sleep 1
+
+            echo "🚀 Starting PM2..."
+            cd "$PROD_PATH"
+            # PORT doit être exporté (pas juste une variable shell locale) pour que
+            # le process Node forké par PM2 en hérite. Sans ça, le serveur standalone
+            # retombe sur le défaut 3000, qui peut déjà être pris par un autre site
+            # sur un serveur mutualisé (EADDRINUSE).
+            # HOSTNAME=0.0.0.0 force le bind sur toutes les interfaces (donc aussi
+            # 127.0.0.1, utilisé par le proxy .htaccess) : sur ce serveur, HOSTNAME
+            # est déjà défini par l'environnement système au FQDN de la machine, ce
+            # qui fait écouter Next uniquement sur cette interface-là sinon.
+            export HOSTNAME=0.0.0.0
+            PORT="$PORT" HOSTNAME="$HOSTNAME" pm2 start server.js \
+              --name "mediascape" \
+              --watch false \
+              --max-memory-restart "500M" \
+              --update-env \
+              --silent
+            sleep 4
+            pm2 save --silent
+            echo "✅ PM2 started"
+
+            echo "🔍 Validating..."
+            ERRORS=0
+            [ -f "$PROD_PATH/server.js" ]        && echo "  ✅ server.js"      || { echo "  ❌ server.js missing"; ERRORS=$((ERRORS+1)); }
+            [ -d "$PROD_PATH/.next/static" ]     && echo "  ✅ .next/static"   || { echo "  ❌ .next/static missing"; ERRORS=$((ERRORS+1)); }
+            [ -f "$PROD_PATH/.env" ]             && echo "  ✅ .env"           || { echo "  ❌ .env missing"; ERRORS=$((ERRORS+1)); }
+
+            PM2_STATUS=$(pm2 jlist | node -e "
+            const fs = require('fs');
+            const list = JSON.parse(fs.readFileSync(0, 'utf-8'));
+            const app = list.find(p => p.name === 'mediascape');
+            if (!app) { console.log('missing'); process.exit(0); }
+            console.log(app.pm2_env.status);
+            ")
+
+            if [ "$PM2_STATUS" = "online" ]; then
+              echo "  ✅ PM2 online"
+            else
+              echo "  ❌ PM2 not online (status: $PM2_STATUS)"
+              ERRORS=$((ERRORS+1))
+            fi
+
+            if [ $ERRORS -gt 0 ]; then
+              echo "❌ Validation failed ($ERRORS errors)"
+              exit 1
+            fi
+            echo "✅ All validations passed"
+            echo "=== ✨ Deploy complete (commit: $COMMIT_HASH) ==="
+
+      - name: Test health endpoint
+        run: |
+          sleep 5
+          for i in {1..5}; do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" https://mediascape.mfwa.org/api/countries)
+            if [ "$CODE" = "200" ]; then echo "✅ Health OK"; exit 0; fi
+            echo "⏳ Attempt $i/5 (HTTP $CODE), retrying..."
+            sleep 3
+          done
+          echo "❌ Health endpoint failed"; exit 1
+
+      - name: Success notification
+        if: success()
+        run: |
+          echo "✅ DEPLOYMENT SUCCESSFUL"
+          echo "App: https://mediascape.mfwa.org"
+          echo "Commit: ${{ github.sha }}"
+
+      - name: Failure - Rollback
+        if: failure()
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            PROD_PATH="/home/${{ secrets.SSH_USER }}/public_html/mediascape.mfwa.org"
+            LATEST_BACKUP=$(ls -td /home/${{ secrets.SSH_USER }}/backups/mediascape-* 2>/dev/null | head -1)
+            if [ -n "$LATEST_BACKUP" ] && [ -d "$LATEST_BACKUP" ]; then
+              echo "🔄 Rolling back to $LATEST_BACKUP"
+              pm2 stop mediascape --silent || true
+              rm -rf "$PROD_PATH"
+              cp -r "$LATEST_BACKUP" "$PROD_PATH"
+              cd "$PROD_PATH"
+              pm2 start server.js --name mediascape --silent
+              sleep 2
+              echo "✅ Rollback complete"
+            else
+              echo "⚠️ No backup found — prod preserved as-is"
+            fi

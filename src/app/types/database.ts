@@ -128,6 +128,7 @@ export interface Database {
 // Types utilitaires de base
 export type Country = Database['public']['Tables']['countries']['Row'];
 export type MediaEnvironment = Database['public']['Tables']['media_environment']['Row'];
+export type Ranking = Database['public']['Tables']['rankings']['Row'];
 
 // SIMPLIFICATION : Plus de rankings, focus sur media_environment
 export type CountryWithMedia = Country & {

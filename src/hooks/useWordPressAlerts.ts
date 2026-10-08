@@ -20,7 +20,7 @@ interface UseWordPressAlertsReturn {
   refetch: () => void;
 }
 
-interface WordPressPost {
+export interface WordPressPost {
   id: number;
   date: string;
   title?: { rendered?: string };
@@ -35,7 +35,7 @@ interface WordPressPost {
 }
 
 // Fonction pour nettoyer le HTML des excerpts WordPress
-function stripHtml(html: string): string {
+export function stripHtml(html: string): string {
   return html
       .replace(/<[^>]*>/g, '')
       .replace(/&nbsp;/g, ' ')
@@ -49,7 +49,7 @@ function stripHtml(html: string): string {
 }
 
 // Fonction pour déterminer la catégorie
-function determineCategory(post: WordPressPost): 'urgent' | 'info' | 'report' {
+export function determineCategory(post: WordPressPost): 'urgent' | 'info' | 'report' {
   const title = post.title?.rendered?.toLowerCase() || '';
 
   if (title.includes('report') || title.includes('annual')) {
