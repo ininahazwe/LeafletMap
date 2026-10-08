@@ -3,6 +3,7 @@ name: 🚀 Deploy Mediascape (Next.js standalone)
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -84,30 +85,51 @@ jobs:
             sleep 1
 
             echo "🚀 Starting PM2..."
-            cd "$PROD_PATH"
-            # PORT doit être exporté (pas juste une variable shell locale) pour que
-            # le process Node forké par PM2 en hérite. Sans ça, le serveur standalone
-            # retombe sur le défaut 3000, qui peut déjà être pris par un autre site
-            # sur un serveur mutualisé (EADDRINUSE).
-            # HOSTNAME=0.0.0.0 force le bind sur toutes les interfaces (donc aussi
-            # 127.0.0.1, utilisé par le proxy .htaccess) : sur ce serveur, HOSTNAME
-            # est déjà défini par l'environnement système au FQDN de la machine, ce
-            # qui fait écouter Next uniquement sur cette interface-là sinon.
-            export HOSTNAME=0.0.0.0
-            PORT="$PORT" HOSTNAME="$HOSTNAME" pm2 start server.js \
-              --name "mediascape" \
-              --watch false \
-              --node-args="--max-old-space-size=192" \
-              --max-memory-restart "300M" \
-              --update-env \
-              --silent
+            # Avec plusieurs package-lock.json détectés, Next peut imbriquer le
+            # standalone (ex: repositories/mediascape/server.js). On localise donc
+            # server.js au lieu de supposer qu'il est à la racine.
+            SERVER_JS=$(find "$PROD_PATH" -maxdepth 4 -name server.js -not -path "*/node_modules/*" | head -1)
+            if [ -z "$SERVER_JS" ]; then
+              echo "❌ server.js introuvable dans $PROD_PATH"
+              ls -la "$PROD_PATH"
+              exit 1
+            fi
+            APP_DIR=$(dirname "$SERVER_JS")
+            echo "📍 server.js : $SERVER_JS"
+
+            # Next standalone lit .env depuis son cwd : on le recopie à côté de server.js
+            [ "$APP_DIR" != "$PROD_PATH" ] && cp "$PROD_PATH/.env" "$APP_DIR/.env" || true
+
+            # Fichier ecosystem : PORT/HOSTNAME sont garantis dans l'env du process
+            # (sinon retombe sur 3000 -> EADDRINUSE sur serveur mutualisé).
+            cat > "$APP_DIR/ecosystem.config.js" <<ECO
+            module.exports = {
+              apps: [{
+                name: 'mediascape',
+                script: 'server.js',
+                cwd: '$APP_DIR',
+                watch: false,
+                node_args: '--max-old-space-size=192',
+                max_memory_restart: '300M',
+                env: { NODE_ENV: 'production', PORT: '$PORT', HOSTNAME: '0.0.0.0' }
+              }]
+            };
+            ECO
+
+            if ! pm2 start "$APP_DIR/ecosystem.config.js"; then
+              echo "❌ pm2 start a échoué — diagnostic :"
+              pm2 list || true
+              pm2 logs mediascape --nostream --lines 40 || true
+              (ss -ltnp 2>/dev/null | grep -E ":$PORT\\b") || echo "port $PORT libre"
+              exit 1
+            fi
             sleep 4
             pm2 save --silent
             echo "✅ PM2 started"
 
             echo "🔍 Validating..."
             ERRORS=0
-            [ -f "$PROD_PATH/server.js" ]        && echo "  ✅ server.js"      || { echo "  ❌ server.js missing"; ERRORS=$((ERRORS+1)); }
+            [ -f "$SERVER_JS" ]                  && echo "  ✅ server.js"      || { echo "  ❌ server.js missing"; ERRORS=$((ERRORS+1)); }
             [ -d "$PROD_PATH/.next/static" ]     && echo "  ✅ .next/static"   || { echo "  ❌ .next/static missing"; ERRORS=$((ERRORS+1)); }
             [ -f "$PROD_PATH/.env" ]             && echo "  ✅ .env"           || { echo "  ❌ .env missing"; ERRORS=$((ERRORS+1)); }
 
@@ -128,6 +150,7 @@ jobs:
 
             if [ $ERRORS -gt 0 ]; then
               echo "❌ Validation failed ($ERRORS errors)"
+              pm2 logs mediascape --nostream --lines 40 || true
               exit 1
             fi
             echo "✅ All validations passed"
@@ -163,11 +186,15 @@ jobs:
             LATEST_BACKUP=$(ls -td /home/${{ secrets.SSH_USER }}/backups/mediascape-* 2>/dev/null | head -1)
             if [ -n "$LATEST_BACKUP" ] && [ -d "$LATEST_BACKUP" ]; then
               echo "🔄 Rolling back to $LATEST_BACKUP"
-              pm2 stop mediascape --silent || true
+              pm2 delete mediascape --silent || true
               rm -rf "$PROD_PATH"
               cp -r "$LATEST_BACKUP" "$PROD_PATH"
-              cd "$PROD_PATH"
-              pm2 start server.js --name mediascape --silent
+              SERVER_JS=$(find "$PROD_PATH" -maxdepth 4 -name server.js -not -path "*/node_modules/*" | head -1)
+              APP_DIR=$(dirname "$SERVER_JS")
+              cd "$APP_DIR"
+              PORT=$(grep -E '^PORT=' "$PROD_PATH/.env" | cut -d '=' -f2)
+              PORT=${PORT:-3004}
+              PORT="$PORT" HOSTNAME=0.0.0.0 pm2 start server.js --name mediascape --node-args="--max-old-space-size=192" --max-memory-restart 300M --update-env --silent
               sleep 2
               echo "✅ Rollback complete"
             else

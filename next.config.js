@@ -42,6 +42,9 @@ const nextConfig = {
   // Mode serveur Node (PM2) requis pour les routes API (/api/*, MySQL, JWT).
   // 'standalone' produit un bundle minimal (.next/standalone) avec son propre server.js.
   output: 'standalone',
+  // Fixe la racine de tracing sur ce dossier : sans ça, un package-lock.json
+  // parasite dans le home du serveur fait imbriquer server.js dans des sous-dossiers.
+  outputFileTracingRoot: __dirname,
   // Build sur serveur mutualisé : limite la RAM (1 seul worker, pas de threads).
   experimental: {
     cpus: 1,
