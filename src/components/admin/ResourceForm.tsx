@@ -3,11 +3,12 @@
 import { Create, Edit, useForm, useSelect } from "@refinedev/antd";
 import { Form, Input, InputNumber, Select } from "antd";
 import type { Rule } from "antd/es/form";
+import RichTextEditor from "@/components/RichTextEditor";
 
 export interface FieldConfig {
   name: string;
   label: string;
-  type?: "text" | "textarea" | "number" | "password" | "country-select";
+  type?: "text" | "textarea" | "richtext" | "number" | "password" | "country-select";
   rules?: Rule[];
   /** Pour "password" en édition: laisser vide = ne pas changer */
   optionalOnEdit?: boolean;
@@ -26,8 +27,9 @@ type ControlProps = Record<string, unknown>;
 function CountrySelectField(props: ControlProps) {
   const { selectProps } = useSelect({
     resource: "countries",
-    optionLabel: "name_fr",
+    optionLabel: "name_en",
     optionValue: "id",
+    pagination: { pageSize: 100 },
   });
   return <Select {...selectProps} {...props} placeholder="Select a country" />;
 }
@@ -36,6 +38,13 @@ function FieldInput({ field, ...controlProps }: { field: FieldConfig } & Control
   switch (field.type) {
     case "textarea":
       return <Input.TextArea rows={4} {...controlProps} />;
+    case "richtext":
+      return (
+        <RichTextEditor
+          value={controlProps.value as string | undefined}
+          onChange={controlProps.onChange as (v: string) => void}
+        />
+      );
     case "number":
       return <InputNumber style={{ width: "100%" }} {...controlProps} />;
     case "password":

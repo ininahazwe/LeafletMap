@@ -94,8 +94,14 @@ export const authProvider: AuthProvider = {
   },
 
   onError: async (error: Error) => {
-    console.error("Auth error:", error);
-    return { error, logout: true, redirectTo: "/admin/login" };
+    // Déconnexion uniquement si la session est invalide (401/403), pas pour
+    // une erreur serveur ou de validation (ex: doublon, 500).
+    const e = error as { statusCode?: number; status?: number };
+    const status = e.statusCode ?? e.status;
+    if (status === 401 || status === 403) {
+      return { error, logout: true, redirectTo: "/admin/login" };
+    }
+    return { error };
   },
 
   getIdentity: async () => {
