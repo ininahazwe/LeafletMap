@@ -1,5 +1,6 @@
 // app/country/[slug]/page.tsx — Page indexable par pays (SSG + métadonnées SEO).
 // URL basée sur le nom complet du pays (ex: /country/guinea-bissau), pas l'ISO3.
+import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { RowDataPacket } from "mysql2";
@@ -26,14 +27,14 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-async function getCountryBySlug(slug: string): Promise<CountryRow | null> {
+const getCountryBySlug = cache(async (slug: string): Promise<CountryRow | null> => {
   const [rows] = await pool.query<CountryRow[]>(
     `SELECT c.id, c.iso_a3, c.name_fr, c.name_en, c.region, c.tooltip_info, me.updated_at
      FROM countries c
      LEFT JOIN media_environment me ON me.country_id = c.id`
   );
   return rows.find((row) => slugifyCountryName(row.name_en) === slug) ?? null;
-}
+});
 
 export async function generateStaticParams() {
   const [rows] = await pool.query<CountryRow[]>("SELECT name_en FROM countries");

@@ -60,8 +60,9 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
+  /* clip (et non hidden) : coupe le débordement horizontal sans faire de body
+     un conteneur de scroll, sinon position:sticky ne marche plus à l'intérieur. */
+  overflow-x: clip;
   line-height: 1.5;
   font-weight: 400;
   display: grid;
@@ -1478,4 +1479,9 @@ h3{
 * {
   scrollbar-width: thin; /* Épaisseur : auto ou thin */
   scrollbar-color: #f5f5dc #f1f1f1; /* [Couleur du curseur] [Couleur du fond] */
+}
+
+/* Retour à la ligne des mots/URL longs dans les textes à interligne relâché */
+.leading-relaxed {
+  overflow-wrap: break-word;
 }

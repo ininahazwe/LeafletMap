@@ -31,7 +31,7 @@ export async function listResource(req: NextRequest, config: CrudConfig) {
     const sp = req.nextUrl.searchParams;
     const start = Number(sp.get("_start") ?? 0);
     const end = Number(sp.get("_end") ?? 10);
-    const limit = Math.max(end - start, 1);
+    const limit = Math.min(Math.max(end - start, 1), 100);
     const sortParam = sp.get("_sort") ?? config.defaultSort ?? pk(config);
     const sortCol =
       config.allowedFields.includes(sortParam) || sortParam === pk(config)

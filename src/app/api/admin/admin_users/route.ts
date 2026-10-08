@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     const sp = req.nextUrl.searchParams;
     const start = Number(sp.get("_start") ?? 0);
     const end = Number(sp.get("_end") ?? 10);
-    const limit = Math.max(end - start, 1);
+    const limit = Math.min(Math.max(end - start, 1), 100);
     const order =
       (sp.get("_order") ?? "ASC").toUpperCase() === "DESC" ? "DESC" : "ASC";
     const sortParam = sp.get("_sort") ?? "id";

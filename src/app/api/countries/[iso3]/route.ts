@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { RowDataPacket } from "mysql2";
 import pool from "@/lib/db";
+import { cached, CACHE_TTL_MS, PUBLIC_CACHE_HEADERS } from "@/lib/memoryCache";
 
 interface CountryRow extends RowDataPacket {
   id: number;
@@ -41,36 +42,37 @@ export async function GET(
       return NextResponse.json({ error: "iso3 requis" }, { status: 400 });
     }
 
-    const [countryRows] = await pool.query<CountryRow[]>(
-      `SELECT id, iso_a3, name_fr, name_en, region, tooltip_info
-       FROM countries
-       WHERE iso_a3 = ?
-       LIMIT 1`,
-      [iso3.toUpperCase()]
-    );
+    const data = await cached(`country:${iso3.toUpperCase()}`, CACHE_TTL_MS, async () => {
+      const [countryRows] = await pool.query<CountryRow[]>(
+        `SELECT id, iso_a3, name_fr, name_en, region, tooltip_info
+         FROM countries
+         WHERE iso_a3 = ?
+         LIMIT 1`,
+        [iso3.toUpperCase()]
+      );
 
-    const country = countryRows[0];
-    if (!country) {
+      const country = countryRows[0];
+      if (!country) return null;
+
+      const [mediaRows] = await pool.query<MediaEnvironmentRow[]>(
+        `SELECT *
+         FROM media_environment
+         WHERE country_id = ?
+         LIMIT 1`,
+        [country.id]
+      );
+
+      return { ...country, media_environment: mediaRows[0] ?? null };
+    });
+
+    if (!data) {
       return NextResponse.json(
         { error: `Pays introuvable pour ISO3 "${iso3}"` },
         { status: 404 }
       );
     }
 
-    const [mediaRows] = await pool.query<MediaEnvironmentRow[]>(
-      `SELECT *
-       FROM media_environment
-       WHERE country_id = ?
-       LIMIT 1`,
-      [country.id]
-    );
-
-    const data = {
-      ...country,
-      media_environment: mediaRows[0] ?? null,
-    };
-
-    return NextResponse.json({ data });
+    return NextResponse.json({ data }, { headers: PUBLIC_CACHE_HEADERS });
   } catch (err) {
     console.error("GET /api/countries/[iso3] error:", err);
     return NextResponse.json(

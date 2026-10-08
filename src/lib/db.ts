@@ -14,7 +14,9 @@ function createPool() {
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     waitForConnections: true,
-    connectionLimit: Number(process.env.DB_POOL_MAX ?? 10),
+    connectionLimit: Number(process.env.DB_POOL_MAX ?? 3),
+    maxIdle: 1, // libère les connexions inutilisées (faible trafic)
+    idleTimeout: 60000,
     queueLimit: 0,
     dateStrings: true,
   });
