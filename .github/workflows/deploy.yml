@@ -63,10 +63,10 @@ jobs:
 
             echo "📤 Deploying files..."
             mkdir -p "$PROD_PATH"
-            rm -rf "$PROD_PATH"/*
+            rm -rf "$PROD_PATH"/* "$PROD_PATH"/.next "$PROD_PATH"/.env "$PROD_PATH"/.htaccess
             cp -r "$REPO_PATH/.next/standalone/." "$PROD_PATH/"
             mkdir -p "$PROD_PATH/.next"
-            cp -r "$REPO_PATH/.next/static" "$PROD_PATH/.next/static"
+            cp -r "$REPO_PATH/.next/static/." "$PROD_PATH/.next/static/"
             cp -r "$REPO_PATH/public" "$PROD_PATH/public"
             cp "$REPO_PATH/.env.local" "$PROD_PATH/.env"
             echo "✅ Files deployed"
