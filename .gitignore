@@ -43,3 +43,6 @@ backend/config.php
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/.env.local.bak-php
+/Claude outputs

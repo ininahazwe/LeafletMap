@@ -122,17 +122,15 @@ export default function AlertCarousel({ alerts, isHidden = false }: AlertCarouse
                   <div className="alert-carousel-content">
                     <h3 className="alert-carousel-card-title">
                       <a
-                        href={alert.link}
+                        href={/^https?:\/\//i.test(alert.link) ? alert.link : '#'}
                         target="_blank"
                         rel="noopener noreferrer"
-                        dangerouslySetInnerHTML={{ __html: alert.title }}
                         style={{ color: 'inherit', textDecoration: 'none' }} // Optionnel : pour garder le style du titre
-                      />
+                      >
+                        {alert.title}
+                      </a>
                     </h3>
-                    <p
-                        className="alert-carousel-excerpt"
-                        dangerouslySetInnerHTML={{ __html: alert.excerpt }}
-                    />
+                    <p className="alert-carousel-excerpt">{alert.excerpt}</p>
 
                     <div className="alert-carousel-footer">
                       {alert.date && (
@@ -143,7 +141,7 @@ export default function AlertCarousel({ alerts, isHidden = false }: AlertCarouse
 
                       {/* Correction : Ajout du tag <a> ouvrant */}
                       <a
-                          href={alert.link}
+                          href={/^https?:\/\//i.test(alert.link) ? alert.link : '#'}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="alert-carousel-link"

@@ -14,6 +14,9 @@ const geistMono = Geist_Mono({
     subsets: ["latin"],
 });
 
+// Sérialise du JSON-LD en échappant "<" (évite l'injection via "</script>").
+const jsonLd = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
+
 export const viewport: Viewport = {
     width: "device-width",
     initialScale: 1,
@@ -126,7 +129,7 @@ export default function RootLayout({
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{
-                    __html: JSON.stringify({
+                    __html: jsonLd({
                         "@context": "https://schema.org",
                         "@type": "Organization",
                         name: SITE_NAME,
@@ -147,7 +150,7 @@ export default function RootLayout({
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{
-                    __html: JSON.stringify({
+                    __html: jsonLd({
                         "@context": "https://schema.org",
                         "@type": "WebApplication",
                         name: SITE_NAME,

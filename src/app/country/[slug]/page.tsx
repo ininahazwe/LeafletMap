@@ -19,6 +19,9 @@ interface CountryRow extends RowDataPacket {
   updated_at: string | null;
 }
 
+// Sérialise du JSON-LD en échappant "<" (évite l'injection via "</script>").
+const jsonLd = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
+
 interface Props {
   params: Promise<{ slug: string }>;
 }
@@ -88,7 +91,7 @@ export default async function CountryPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: jsonLd({
             "@context": "https://schema.org",
             "@type": "WebPage",
             url,
@@ -115,7 +118,7 @@ export default async function CountryPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: jsonLd({
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
             itemListElement: [

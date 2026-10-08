@@ -36,15 +36,26 @@ export interface WordPressPost {
 
 // Fonction pour nettoyer le HTML des excerpts WordPress
 export function stripHtml(html: string): string {
-  return html
+  const input = html.replace(/\[&hellip;\]/g, '...');
+
+  // Navigateur : DOMParser crée un document inerte (pas de script, pas de chargement
+  // d'image) ; textContent renvoie du texte brut, entités décodées (&#8217; -> ’,
+  // &lt;img&gt; -> "<img>" en simple texte). Le résultat doit être affiché comme
+  // du texte (jamais via dangerouslySetInnerHTML).
+  if (typeof DOMParser !== 'undefined') {
+    const doc = new DOMParser().parseFromString(input, 'text/html');
+    return (doc.body.textContent ?? '').replace(/\s+/g, ' ').trim();
+  }
+
+  // Repli (rendu serveur) : suppression des balises + décodage minimal.
+  return input
       .replace(/<[^>]*>/g, '')
       .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#0?39;/g, "'")
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#039;/g, "'")
-      .replace(/\[&hellip;\]/g, '...')
+      .replace(/&amp;/g, '&')
       .trim();
 }
 
