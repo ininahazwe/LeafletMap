@@ -1,8 +1,9 @@
 // components/country/CountryDetailContent.tsx
 // Contenu partagé entre la modal (drawer latéral) et la page indexable /country/[iso3].
 // Design minimaliste : fond blanc, pas de blocs colorés, lignes de grille décoratives.
-// Layout unique (page = drawer) : lien "← Back to map", header, tabs et contenu dans une
-// seule colonne max-w-6xl qui scrolle en un bloc. Seule la nav par ancres est sticky.
+// Layout : onglets Media Landscape / Alerts en colonne verticale sticky à gauche ;
+// sections du Media Landscape navigables via une barre d'ancres horizontale sticky.
+// Chaque section : titre sticky à gauche (jusqu'à la section suivante) + texte à droite.
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -86,9 +87,9 @@ export const iso3ToIso2 = (iso3: string): string => {
 
 function categoryDotClass(category: CountryAlert["category"]): string {
   switch (category) {
-    case "urgent": return "bg-red-500";
-    case "report": return "bg-blue-500";
-    default: return "bg-gray-400";
+    case "urgent": return "alert-dot--urgent";
+    case "report": return "alert-dot--report";
+    default: return "alert-dot--default";
   }
 }
 
@@ -195,7 +196,7 @@ export default function CountryDetailContent({ iso3, embedded = false, onClose }
   // Apparition smooth du texte quand la section entre dans le viewport (une fois).
   useEffect(() => {
     if (activeTab !== "media") return;
-    const targets = [...detailSections.map((s) => s.id), ...gridItems.map((g) => g.id)];
+    const targets = navItems.map((n) => n.id);
     if (targets.length === 0) return;
 
     const triggers: ScrollTrigger[] = [];
@@ -209,13 +210,14 @@ export default function CountryDetailContent({ iso3, embedded = false, onClose }
           scroller: embedded ? scrollContainerRef.current ?? undefined : undefined,
           start: "top 90%",
           once: true,
-          onEnter: () => gsap.to(el, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }),
+          // clearProps : ne pas laisser de transform résiduel sur la section (libellé sticky)
+          onEnter: () => gsap.to(el, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", clearProps: "transform" }),
         })
       );
     });
 
     return () => triggers.forEach((t) => t.kill());
-  }, [activeTab, detailSections, gridItems, embedded]);
+  }, [activeTab, navItems, embedded]);
 
   // Entrée en douceur des cartes d'alertes (GSAP)
   useEffect(() => {
@@ -229,296 +231,288 @@ export default function CountryDetailContent({ iso3, embedded = false, onClose }
     );
   }, [activeTab, filteredAlerts]);
 
+  // Hauteur de la barre d'ancres horizontale (sticky) : sert d'offset pour les
+  // libellés sticky des sections et pour le scroll vers une ancre.
+  const [anchorNavH, setAnchorNavH] = useState(64);
+  const anchorNavRef = useRef<HTMLElement | null>(null);
+  const anchorListRef = useRef<HTMLUListElement | null>(null);
+
+  useEffect(() => {
+    const el = anchorNavRef.current;
+    if (!el) return;
+    const update = () => setAnchorNavH(el.offsetHeight);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [activeTab, navItems.length]);
+
+  const stickyLabelTop = anchorNavH + 32;
+
+  // Lignes de contenu (ordre = ordre de la nav) : sections texte + bloc Media Outlets.
+  const rows = useMemo(() => {
+    const byId = new Map(detailSections.map((s) => [s.id, s]));
+    return navItems.map((item, i) => ({
+      id: item.id,
+      label: item.label,
+      number: String(i + 1).padStart(2, "0"),
+      html: byId.get(item.id)?.html ?? null,
+    }));
+  }, [navItems, detailSections]);
+
+  // Garde l'ancre active visible dans la barre horizontale (mobile / petits écrans).
+  useEffect(() => {
+    const list = anchorListRef.current;
+    if (!list || !activeSectionId) return;
+    const item = list.querySelector<HTMLElement>(`[data-item="${activeSectionId}"]`);
+    if (!item) return;
+    const left = item.offsetLeft - list.clientWidth / 2 + item.offsetWidth / 2;
+    list.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+  }, [activeSectionId]);
+
   const scrollToSection = (id: string) => {
     const el = sectionElsRef.current[id];
     if (!el) return;
-    if (embedded && scrollContainerRef.current) {
-      gsap.to(scrollContainerRef.current, {
-        duration: 0.6,
-        ease: "power2.inOut",
-        scrollTo: { y: el, offsetY: 8 },
-      });
-    } else {
-      gsap.to(window, {
-        duration: 0.6,
-        ease: "power2.inOut",
-        scrollTo: { y: el, offsetY: 96 },
-      });
-    }
+    const offsetY = anchorNavH + 16;
+    gsap.to(embedded && scrollContainerRef.current ? scrollContainerRef.current : window, {
+      duration: 0.6,
+      ease: "power2.inOut",
+      scrollTo: { y: el, offsetY },
+    });
   };
+
+  const yearItems = useMemo(
+    () => [
+      { id: "all", label: "All" },
+      ...sortedYears.map((y) => ({ id: String(y), label: String(y) })),
+    ],
+    [sortedYears]
+  );
 
   return (
       <div
           ref={embedded ? scrollContainerRef : undefined}
-          className={`bg-white py-10 ${
-              embedded ? "h-full overflow-y-auto content-grid-embedded" : "min-h-screen content-grid"
+          className={`country-page ${
+              embedded ? "country-page--embedded content-grid-embedded" : "country-page--full content-grid"
           }`}
       >
           {/* Retour à la carte : ferme le drawer si embarqué, navigue sinon */}
           {embedded ? (
-              <button
-                  onClick={onClose}
-                  className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-8 transition-colors"
-              >
+              <button onClick={onClose} className="country-back">
                 ← Back to map
               </button>
           ) : (
-              <Link
-                  href="/"
-                  className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-8 transition-colors"
-              >
+              <Link href="/" className="country-back">
                 ← Back to map
               </Link>
           )}
 
           {/* Header */}
-          <div className="flex items-center gap-4">
+          <div className="country-header">
             <img
                 src={`https://flagcdn.com/w80/${iso3ToIso2(iso3).toLowerCase()}.png`}
                 alt={`Flag of ${countryData?.name_fr || countryData?.name_en || iso3}`}
-                className="w-12 h-8 object-cover rounded"
+                className="country-flag"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = `https://purecatamphetamine.github.io/country-flag-icons/3x2/${iso3}.svg`;
                 }}
             />
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="country-title">
               {countryData?.name_fr || countryData?.name_en || iso3}
             </h1>
           </div>
 
-          {/* Onglets (soulignés, sans bordure de séparation) */}
-          <div className="flex gap-6 mt-5 items-center">
-            {tabs.map((tab) => (
-                <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    className={`text-xl font-medium transition-all duration-200 ${
-                        activeTab === tab.key
-                            ? "bg-[#f5f5dc] text-gray-900 px-5 py-1.5 rounded-[20px]" /* Style beige uniquement pour l'actif */
-                            : "text-gray-400 hover:text-gray-600 px-5 py-1.5" /* Même padding pour éviter les sauts de mise en page */
-                    }`}
-                >
-                  {tab.label}
-                  {tab.key === "alerts" && alerts.length > 0 && (
-                      <span className={`ml-1.5 text-xs ${activeTab === tab.key ? "text-gray-600" : "text-gray-400"}`}>
-            ({alerts.length})
-          </span>
-                  )}
-                </button>
-            ))}
-        </div>
+          <div className="country-body">
+            {/* Onglets Media Landscape / Alerts : colonne verticale sticky (ligne sur mobile) */}
+            <aside className="country-tabs">
+              <div className="country-tablist" role="tablist">
+                {tabs.map((tab) => (
+                    <button
+                        key={tab.key}
+                        role="tab"
+                        aria-selected={activeTab === tab.key}
+                        onClick={() => setActiveTab(tab.key)}
+                        className={`country-tab ${activeTab === tab.key ? "is-active" : ""}`}
+                    >
+                      {tab.label}
+                      {tab.key === "alerts" && alerts.length > 0 && (
+                          <span className="country-tab-count">({alerts.length})</span>
+                      )}
+                    </button>
+                ))}
+              </div>
+            </aside>
 
-        {/* Contenu */}
-          <div className="mt-8">
-            {loading ? (
-                <div className="flex items-center justify-center py-24">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-400"/>
-                </div>
-            ) : error ? (
-                <div className="flex items-center justify-center text-red-500 py-24">
-                  <div className="text-center">
-                    <p className="text-base font-medium">Loading error</p>
-                    <p className="text-sm mt-2">{error}</p>
+            {/* Contenu */}
+            <div className="country-content">
+              {loading ? (
+                  <div className="country-state">
+                    <div className="country-spinner" />
                   </div>
-                </div>
-            ) : !countryData ? (
-                <div className="flex items-center justify-center text-gray-500 py-24">
-                  <p>No data available for {iso3}</p>
-                </div>
-            ) : (
-                <div>
-                  {/* ===== Media Landscape : anchor nav + texte ===== */}
-                  {activeTab === "media" && (
-                      <div>
-                        {navItems.length === 0 ? (
-                            <p className="text-gray-400 italic">No media landscape data available for this country.</p>
-                        ) : (
-                            <div className="flex gap-12">
-                              {/* Navigation par ancres, sticky à 5vh du haut */}
-                              <nav className="hidden md:block w-56 shrink-0 self-start sticky bg-white" style={{top: "5vh"}}>
-                                <ul className="space-y-4">
-                                  {navItems.map((item) => {
-                                    const active = activeSectionId === item.id;
-                                    return (
-                                        <li key={item.id}>
-                                          <button
-                                              onClick={() => scrollToSection(item.id)}
-                                              className={`flex items-center gap-2 text-left text-sm transition-all duration-300 ${
-                                                  active
-                                                      ? "font-semibold text-gray-900"
-                                                      : "font-normal text-gray-400 hover:text-gray-600"
-                                              }`}
-                                          >
-                                  <span
-                                      className={`inline-block w-0 h-0 shrink-0 border-y-4 border-y-transparent border-l-4 transition-opacity duration-300 ${
-                                          active ? "border-l-gray-900 opacity-100" : "opacity-0"
-                                      }`}
-                                  />
-                                            {item.label}
-                                          </button>
-                                        </li>
-                                    );
-                                  })}
-                                </ul>
-                              </nav>
+              ) : error ? (
+                  <div className="country-state country-state--error">
+                    <div>
+                      <p className="country-state__title">Loading error</p>
+                      <p className="country-state__message">{error}</p>
+                    </div>
+                  </div>
+              ) : !countryData ? (
+                  <div className="country-state">
+                    <p>No data available for {iso3}</p>
+                  </div>
+              ) : (
+                  <div>
+                    {/* ===== Media Landscape : barre d'ancres horizontale + sections ===== */}
+                    {activeTab === "media" && (
+                        <div>
+                          {rows.length === 0 ? (
+                              <p className="country-empty">No media landscape data available for this country.</p>
+                          ) : (
+                              <>
+                                <StickyBar
+                                    ariaLabel="Sections"
+                                    navRef={anchorNavRef}
+                                    listRef={anchorListRef}
+                                    items={rows.map((r) => ({ id: r.id, label: r.label, kicker: `${r.number}.` }))}
+                                    activeId={activeSectionId}
+                                    onSelect={scrollToSection}
+                                />
 
-                              {/* Texte */}
-                              <div className="flex-1 min-w-0 max-w-3xl space-y-16" style={{fontSize: "1.2rem"}}>
-                                {detailSections.map((s) => {
-                                  const Icon = s.icon;
-                                  return (
-                                      <React.Fragment key={s.id}>
-                                        <section
-                                            id={s.id}
-                                            ref={(el) => {
-                                              sectionElsRef.current[s.id] = el;
-                                            }}
-                                            className="scroll-mt-8 bg-white"
-                                        >
-                                          <div className="flex items-center gap-2 mb-3">
-                                            <h3 className="text-xl font-semibold text-gray-900">{s.label}</h3>
-                                          </div>
-                                          <div className="text-gray-700 leading-relaxed">{parse(s.html)}</div>
-                                        </section>
+                                <div className="country-sections">
+                                  {rows.map((row) => (
+                                      <section
+                                          key={row.id}
+                                          id={row.id}
+                                          ref={(el) => {
+                                            sectionElsRef.current[row.id] = el;
+                                          }}
+                                          className="country-section"
+                                      >
+                                        {/* Titre sticky jusqu'à la section suivante (desktop) */}
+                                        <div className="country-section__label" style={{top: stickyLabelTop}}>
+                                          <h2 className="country-section__title">{row.label}</h2>
+                                        </div>
 
-                                        {/* Bloc "Media Outlets" inséré après Journalists Associations */}
-                                        {s.label === "Journalists Associations" && gridItems.length > 0 && (
-                                            <section
-                                                id={MEDIA_OUTLETS_ID}
-                                                ref={(el) => {
-                                                  sectionElsRef.current[MEDIA_OUTLETS_ID] = el;
-                                                }}
-                                                className="scroll-mt-8"
-                                            >
-                                              <h3 className="font-semibold mb-6">Media
-                                                Outlets</h3>
-                                              <div className="card-list grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-8">
+                                        <div className="country-section__body">
+                                          {row.html !== null ? (
+                                              <div className="country-richtext">{parse(row.html)}</div>
+                                          ) : (
+                                              <div className="country-cards">
                                                 {gridItems.map((g) => (
-                                                    <div
-                                                        className="card-list-item"
-                                                        key={g.id}
-                                                        ref={(el) => {
-                                                          sectionElsRef.current[g.id] = el;
-                                                        }}
-                                                    >
-                                                      <h4 className="font-semibold mb-1.5">{g.label}</h4>
-                                                      <div className="leading-relaxed"
-                                                           style={{fontSize: "1.2rem"}}>
-                                                        {parse(g.html)}
-                                                      </div>
+                                                    <div className="card-list-item" key={g.id}>
+                                                      <h3 className="country-card__title">{g.label}</h3>
+                                                      <div className="country-richtext">{parse(g.html)}</div>
                                                     </div>
                                                 ))}
                                               </div>
-                                            </section>
-                                        )}
-                                      </React.Fragment>
-                                  );
-                                })}
-
-                                {/* Si aucune section détaillée n'a de contenu, la grille s'affiche seule */}
-                                {detailSections.every((s) => s.label !== "Journalists Associations") &&
-                                    gridItems.length > 0 && (
-                                        <section
-                                            id={MEDIA_OUTLETS_ID}
-                                            ref={(el) => {
-                                              sectionElsRef.current[MEDIA_OUTLETS_ID] = el;
-                                            }}
-                                            className="scroll-mt-8"
-                                        >
-                                          <h3 className="text-base font-semibold text-gray-900 mb-6">Media Outlets</h3>
-                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-8">
-                                            {gridItems.map((g) => (
-                                                <div key={g.id} ref={(el) => {
-                                                  sectionElsRef.current[g.id] = el;
-                                                }}>
-                                                  <h4 className="font-semibold text-gray-900 mb-1.5">{g.label}</h4>
-                                                  <div className="text-gray-600 leading-relaxed"
-                                                       style={{fontSize: "1.2rem"}}>
-                                                    {parse(g.html)}
-                                                  </div>
-                                                </div>
-                                            ))}
-                                          </div>
-                                        </section>
-                                    )}
-                              </div>
-                            </div>
-                        )}
-                      </div>
-                  )}
-
-                  {/* ===== Alerts : grille 3 colonnes ===== */}
-                  {activeTab === "alerts" && (
-                      <div>
-                        <div className="flex flex-wrap gap-2 mb-6 bg-white">
-                          <button
-                              onClick={() => setSelectedYear("all")}
-                              className={`px-3 py-1 text-sm border-b-2 transition-colors ${
-                                  selectedYear === "all"
-                                      ? "border-gray-900 text-gray-900 font-medium"
-                                      : "border-transparent text-gray-400 hover:text-gray-600"
-                              }`}
-                          >
-                            All
-                          </button>
-                          {sortedYears.map((year) => (
-                              <button
-                                  key={year}
-                                  onClick={() => setSelectedYear(year)}
-                                  className={`px-3 py-1 text-sm border-b-2 transition-colors ${
-                                      selectedYear === year
-                                          ? "border-gray-900 text-gray-900 font-medium"
-                                          : "border-transparent text-gray-400 hover:text-gray-600"
-                                  }`}
-                              >
-                                {year}
-                              </button>
-                          ))}
+                                          )}
+                                          <div className="ligne-sur-mesure"></div>
+                                        </div>
+                                      </section>
+                                  ))}
+                                </div>
+                              </>
+                          )}
                         </div>
+                    )}
 
-                        {alertsLoading ? (
-                            <div className="flex items-center justify-center py-12">
-                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400"/>
-                            </div>
-                        ) : alertsError ? (
-                            <div className="flex items-center gap-2 text-red-500 py-8">
-                              <AlertTriangle className="w-5 h-5"/>
-                              <p>{alertsError}</p>
-                            </div>
-                        ) : filteredAlerts.length === 0 ? (
-                            <p className="text-gray-400 italic py-8 text-center">
-                              No alerts{selectedYear !== "all" ? ` in ${selectedYear}` : ""} for this country.
-                            </p>
-                        ) : (
-                            <div ref={alertsGridRef} className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                              {filteredAlerts.map((alert) => (
-                                  <a
-                                      key={alert.id}
-                                      href={alert.link}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="alert-card bg-white rounded-lg p-4 hover:border-gray-400 transition-colors flex flex-col"
-                                  >
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <span className={`w-2 h-2 rounded-full ${categoryDotClass(alert.category)}`}/>
-                                      <span className="text-xs text-gray-400">
-                              {new Date(alert.date).toLocaleDateString("en-US")}
-                            </span>
-                                    </div>
-                                    <h4 className="font-semibold text-gray-900 mb-1 leading-snug">{alert.title}</h4>
-                                    {alert.excerpt && (
-                                        <p className="text-sm text-gray-600 line-clamp-3">{alert.excerpt}</p>
-                                    )}
-                                  </a>
-                              ))}
-                            </div>
-                        )}
-                      </div>
-                  )}
-                </div>
-            )}
+                    {/* ===== Alerts : années en barre sticky (même style que les sections) ===== */}
+                    {activeTab === "alerts" && (
+                        <div>
+                          <StickyBar
+                              ariaLabel="Years"
+                              items={yearItems}
+                              activeId={String(selectedYear)}
+                              onSelect={(id) => setSelectedYear(id === "all" ? "all" : Number(id))}
+                          />
+
+                          <div className="country-alerts">
+                            {alertsLoading ? (
+                                <div className="country-state country-state--compact">
+                                  <div className="country-spinner country-spinner--sm" />
+                                </div>
+                            ) : alertsError ? (
+                                <div className="country-error-inline">
+                                  <AlertTriangle />
+                                  <p>{alertsError}</p>
+                                </div>
+                            ) : filteredAlerts.length === 0 ? (
+                                <p className="country-empty country-empty--center">
+                                  No alerts{selectedYear !== "all" ? ` in ${selectedYear}` : ""} for this country.
+                                </p>
+                            ) : (
+                                <div ref={alertsGridRef} className="alert-grid">
+                                  {filteredAlerts.map((alert) => (
+                                      <a
+                                          key={alert.id}
+                                          href={/^https?:\/\//i.test(alert.link) ? alert.link : "#"}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="alert-card"
+                                      >
+                                        <div className="alert-card__meta">
+                                          <span className={`alert-dot ${categoryDotClass(alert.category)}`} />
+                                          <span className="alert-card__date">
+                                            {new Date(alert.date).toLocaleDateString("en-US")}
+                                          </span>
+                                        </div>
+                                        <h4 className="alert-card__title">{alert.title}</h4>
+                                        {alert.excerpt && (
+                                            <p className="alert-card__excerpt">{alert.excerpt}</p>
+                                        )}
+                                      </a>
+                                  ))}
+                                </div>
+                            )}
+                          </div>
+                        </div>
+                    )}
+                  </div>
+              )}
+            </div>
           </div>
       </div>
+  );
+}
+
+// Barre de navigation horizontale sticky (sections du Media Landscape, années des Alerts).
+// Défile horizontalement sur petits écrans ; soulignement noir sous l'élément actif.
+function StickyBar({
+  items,
+  activeId,
+  onSelect,
+  ariaLabel,
+  navRef,
+  listRef,
+}: {
+  items: { id: string; label: string; kicker?: string }[];
+  activeId: string | null;
+  onSelect: (id: string) => void;
+  ariaLabel: string;
+  navRef?: React.Ref<HTMLElement>;
+  listRef?: React.Ref<HTMLUListElement>;
+}) {
+  return (
+      <nav ref={navRef} aria-label={ariaLabel} className="sticky-bar">
+        <ul ref={listRef} className="sticky-bar__list">
+          {items.map((item) => {
+            const active = activeId === item.id;
+            return (
+                <li key={item.id} data-item={item.id} className="sticky-bar__item">
+                  <button
+                      onClick={() => onSelect(item.id)}
+                      aria-current={active ? "true" : undefined}
+                      className={`sticky-bar__button ${active ? "is-active" : ""}`}
+                  >
+                    {item.kicker && <span className="sticky-bar__kicker">{item.kicker}</span>}
+                    <span className="sticky-bar__label">{item.label}</span>
+                    <span className="sticky-bar__line" />
+                  </button>
+                </li>
+            );
+          })}
+        </ul>
+      </nav>
   );
 }
