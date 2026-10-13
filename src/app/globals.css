@@ -1510,6 +1510,18 @@ h3{
 .country-page--embedded {
   height: 100%;
   overflow-y: auto;
+  /* Pas de padding-top sur le conteneur qui défile : un élément sticky se colle
+     sous ce padding, ce qui laissait un vide au-dessus de la barre "Sections".
+     L'espace du haut est recréé par ::before (il défile avec le contenu). */
+  padding-top: 0;
+}
+.country-page--embedded::before {
+  content: "";
+  display: block;
+  height: 2rem;
+}
+@media (min-width: 768px) {
+  .country-page--embedded::before { height: 2.5rem; }
 }
 .country-page--full {
   min-height: 100vh;
